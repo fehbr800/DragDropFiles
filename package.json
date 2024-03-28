@@ -21,6 +21,7 @@
     "react-dnd-html5-backend": "^16.0.1",
     "react-doc-viewer": "^0.1.5",
     "react-dom": "^18",
+    "react-draggable": "^4.4.6",
     "react-dropzone": "^14.2.3",
     "react-konva": "^18.2.10",
     "react-pdf": "^7.7.1"
