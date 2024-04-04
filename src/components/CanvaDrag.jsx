@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from "react";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
+import { v4 as uuidv4 } from 'uuid';
 
 // 
 
@@ -91,7 +92,8 @@ export const SignatureForm = ({ onSubmit }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit({ name, email });
+    const id = uuidv4(); // Gera um ID único
+    onSubmit({ id, name, email }); // Envia o ID junto com os outros dados do formulário
     setName('');
     setEmail('');
   };
@@ -107,18 +109,6 @@ export const SignatureForm = ({ onSubmit }) => {
 
 
 export const SignatoriesList = ({ signatories, setSignatures }) => {
-  const handleDragEnd = (result) => {
-    if (!result.destination) return; // Movimento cancelado
-  
-    const startIndex = result.source.index;
-    const endIndex = result.destination.index;
-  
-    const updatedSignatories = [...signatories]; // Create a new array that is a deep copy of the original array
-    const [removed] = updatedSignatories.splice(startIndex, 1); // Remover o item arrastado
-    updatedSignatories.splice(endIndex, 0, removed); // Inserir o item na nova posição
-  
-    setSignatures(updatedSignatories);
-  };
 
   const handleRemoveSignatory = (index) => {
     const updatedSignatories = [...signatories];
@@ -129,7 +119,7 @@ export const SignatoriesList = ({ signatories, setSignatures }) => {
   return (
     <div className="mt-4">
       <h2 className="mb-2 text-lg font-semibold">Signatários Adicionados:</h2>
-      <DragDropContext onDragEnd={handleDragEnd}>
+  
   <Droppable droppableId="signatories">
     {(provided) => (
       <ul
@@ -158,7 +148,6 @@ export const SignatoriesList = ({ signatories, setSignatures }) => {
       </ul>
     )}
   </Droppable>
-</DragDropContext>
     </div>
   );
 };

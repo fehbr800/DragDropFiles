@@ -28,25 +28,13 @@ export default function Home() {
     setPdfSignatures(updatedSignatures);
   };
 
-  const handleDragEnd = (result) => {
-    if (!result.destination) {
-      return;
-    }
   
-    const items = Array.from(pdfSignatures);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
-  
-    setPdfSignatures(items);
-  };
-
   return (
-    <DndProvider backend={HTML5Backend}>
-    <DragDropContext onDragEnd={handleDragEnd}>
+  
       <main className="flex justify-center min-h-screen p-8 mx-auto gap-11">
         <div className="flex flex-col gap-5">
           <SignatureForm onSubmit={handleSubmitSignature} />
-          <SignatoriesList signatories={pdfSignatures} setSignatures={setPdfSignatures} />
+          {/* <SignatoriesList signatories={pdfSignatures} setSignatures={setPdfSignatures} /> */}
         </div>
         <div className="p-4 rounded-lg shadow">
           {pdfFile ? (
@@ -62,7 +50,6 @@ export default function Home() {
           )}
         </div>
       </main>
-    </DragDropContext>
-  </DndProvider>
+
   );
 }
