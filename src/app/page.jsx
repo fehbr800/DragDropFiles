@@ -1,12 +1,7 @@
 'use client'
-import DropZoneComponent, { DragOnDropFilesRender } from "@/components/DragDrop";
-import StepsNavigation from "@/components/StepsNavigation";
-import RenderFile from "./renderFile/page";
+import DropZoneComponent from "@/components/DragDrop";
 import { useState } from "react";
-import DraggableSignature, { SignatoriesList, SignatureForm } from "@/components/CanvaDrag";
-import { DndProvider } from "react-dnd";
-import { DragDropContext } from "react-beautiful-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
+import { SignatureForm } from "@/components/CanvaDrag";
 
 
 
@@ -34,7 +29,6 @@ export default function Home() {
       <main className="flex justify-center min-h-screen p-8 mx-auto gap-11">
         <div className="flex flex-col gap-5">
           <SignatureForm onSubmit={handleSubmitSignature} />
-          {/* <SignatoriesList signatories={pdfSignatures} setSignatures={setPdfSignatures} /> */}
         </div>
         <div className="p-4 rounded-lg shadow">
           {pdfFile ? (

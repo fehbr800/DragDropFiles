@@ -1,9 +1,6 @@
-import { useRouter } from 'next/navigation';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
-import StepsNavigation from './StepsNavigation';
 import { Document, Page, pdfjs } from 'react-pdf';
-import DraggableSignatureCard from './CanvaDrag';
 import Draggable from 'react-draggable';
 
 
