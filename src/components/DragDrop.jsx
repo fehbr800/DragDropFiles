@@ -22,7 +22,7 @@ return(
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
-const DropZoneComponent = ({ signatures, pdfFile }) => {
+const DropZoneComponent = ({ signatures, pdfFile, onDrop }) => {
   const [numPages, setNumPages] = useState(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [showPDF, setShowPDF] = useState(false);
@@ -89,14 +89,15 @@ const DropZoneComponent = ({ signatures, pdfFile }) => {
     }
   };
 
-  const onDrop = useCallback((acceptedFiles) => {
-    setFiles((prevFiles) => [...prevFiles, ...acceptedFiles]);
+  // Altere sua função onDrop atual para usar a função passada como propriedade
+  const handleDrop = useCallback((acceptedFiles) => {
+    onDrop(acceptedFiles); // Chama a função onDrop passada como propriedade
     setShowPDF(true);
-    setNumPages(acceptedFiles.length);
-  }, []);
+  }, [onDrop]);
+
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
+    onDrop: handleDrop,
     accept: '.pdf',
   });
 
