@@ -1,7 +1,7 @@
 'use client'
 import DropZoneComponent from "@/components/DragDrop";
 import { useState } from "react";
-import { SignatureForm } from "@/components/CanvaDrag";
+import { SignatureForm, SubscriptionList } from "@/components/CanvaDrag";
 
 
 
@@ -29,6 +29,9 @@ export default function Home() {
     <main className="flex justify-center min-h-screen p-8 mx-auto gap-11">
       <div className="flex flex-col gap-5">
       {pdfFile &&  <SignatureForm onSubmit={handleSubmitSignature} />}
+
+      <SubscriptionList/>
+      
       </div>
       <div className="p-4 rounded-lg shadow">
         <DropZoneComponent pdfFile={pdfFile} signatures={pdfSignatures} onDrop={handleDrop} />

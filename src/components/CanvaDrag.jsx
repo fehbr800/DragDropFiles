@@ -1,8 +1,10 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { DndContext, closestCenter, useDraggable, useDroppable } from '@dnd-kit/core';
+
 import { Draggable, Droppable } from "react-beautiful-dnd";
 import { v4 as uuidv4 } from 'uuid';
-
+import { SortableContext, sortableKeyboardCoordinates, useSortable } from '@dnd-kit/sortable'
 
 
 export const SignatureForm = ({ onSubmit }) => {
@@ -71,5 +73,103 @@ export const SignatoriesList = ({ signatories, setSignatures }) => {
   );
 };
 
+
+export function SubscriptionList() {
+  const [subscriptions, setSubscriptions] = useState([
+    { id: 1, name: 'Assinatura 1', position: { x: 0, y: 0 } },
+    { id: 2, name: 'Assinatura 2', position: { x: 100, y: 0 } },
+    { id: 3, name: 'Assinatura 3', position: { x: 200, y: 0 } }
+  ]);
+  
+  const handleDrop = (event) => {
+    const subscriptionId = event?.data?.current?.draggable?.id;
+    if (subscriptionId) {
+      onDrop(subscriptionId);
+    }
+  };
+
+  return (
+    <DndContext>
+      <PositionedSubscription onDrop={handleDrop}>
+        <SortableContext items={subscriptions}>
+          <ul>
+            {subscriptions.map(subscription => (
+              <Subscription
+                key={subscription.id}
+                subscription={subscription}
+                onDrop={handleDrop}
+                style={{
+                  position: 'absolute',
+                  left: `${subscription.position.x}px`,
+                  top: `${subscription.position.y}px`
+                }}
+              />
+            ))}
+          </ul>
+        </SortableContext>
+      </PositionedSubscription>
+    </DndContext>
+  );
+} 
+
+function Subscription({ subscription, onDrop }) {
+  const { attributes, listeners, isDragging, setNodeRef, transform } = useDraggable({
+    id: subscription.id
+  });
+
+  const handleDragEnd = () => {
+    if (isDragging) {
+      onDrop(subscription.id);
+    }
+  };
+
+  return (
+    <li
+    className="absolute z-50 bg-black"
+      ref={setNodeRef}
+      style={{
+        transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined
+      }}
+      {...attributes}
+      {...listeners}
+      onDragEnd={handleDragEnd}
+    >
+      {subscription.name}
+    </li>
+  );
+}
+
+export default Subscription;
+
+
+
+
+function PositionedSubscription({ onDrop }) {
+  const { isOver, setNodeRef } = useDroppable({
+    id: 'positioned-subscription'
+  });
+
+  const handleDrop = (event) => {
+    const subscriptionId = event.data.current.draggable.id;
+    onDrop(subscriptionId);
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        width: '300px',
+        height: '300px',
+        border: '2px dashed #ccc',
+        position: 'relative',
+        zIndex:10
+      }}
+      onDrop={(event) => handleDrop(event)}
+      onDragOver={(event) => event.preventDefault()}
+    >
+      {isOver && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0, 0, 0, 0.1)' }} />}
+    </div>
+  );
+}
 
 
