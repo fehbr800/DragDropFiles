@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Document, Page, pdfjs } from 'react-pdf';
 import Draggable from 'react-draggable';
+import { SignatoryCard } from './CanvaDrag';
 
 
 
@@ -20,9 +21,31 @@ return(
 }
 
 
+const renderSignature = (signature) => {
+  if (!selectedSignatureType || selectedSignatureType === 'Rubrica') {
+    return (
+      <div className={`absolute z-50 p-2 flex flex-col bg-white/50 border-2 border-dashed border-gray-300
+        rounded shadow-md cursor-pointer ${signature.fixed ? 'opacity-50' : ''}`}>
+        <span className="font-bold">{signature.name}</span> <span>{signature.email}</span>
+      </div>
+    );
+  } else if (selectedSignatureType === 'Iniciais') {
+    const initials = signature.name.split(' ').map((name) => name.charAt(0)).join('');
+    return (
+      <div className={`absolute z-50 p-2 flex flex-col bg-white/50 border-2 border-dashed border-gray-300
+        rounded shadow-md cursor-pointer ${signature.fixed ? 'opacity-50' : ''}`}>
+        <span className="font-bold">{initials}</span> <span>{signature.email}</span>
+      </div>
+    );
+  }
+};
+
+
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
-const DropZoneComponent = ({ signatures, pdfFile, onDrop }) => {
+const DropZoneComponent = ({ signatures, pdfFile, onDrop, selectedType}) => {
+console.log(selectedType)
+  
   const [numPages, setNumPages] = useState(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [showPDF, setShowPDF] = useState(false);
@@ -89,9 +112,8 @@ const DropZoneComponent = ({ signatures, pdfFile, onDrop }) => {
     }
   };
 
-  // Altere sua função onDrop atual para usar a função passada como propriedade
   const handleDrop = useCallback((acceptedFiles) => {
-    onDrop(acceptedFiles); // Chama a função onDrop passada como propriedade
+    onDrop(acceptedFiles); 
     setShowPDF(true);
   }, [onDrop]);
 
@@ -150,18 +172,19 @@ const DropZoneComponent = ({ signatures, pdfFile, onDrop }) => {
                           console.log(`Posição: x=${signature.x}, y=${signature.y}, Página: ${pageNumber}`);
                           return (
                             <Draggable
-                              key={`signature_${index}`}
-                              defaultPosition={{ x: signature.x, y: signature.y }}
-                              onStop={(e, data) => handleDragStop(pageNumber, e, data, index)}
-                              disabled={signature.fixed}
+                            key={`signature_${index}`}
+                            defaultPosition={{ x: 0, y: 0 }}
+                            onStop={(e, data) => handleDragStop(pageNumber, e, data, index)}
+                            disabled={signature.fixed}
+                          >
+                            <div
+                              className={`absolute z-50 p-2 flex flex-col 
+                               cursor-pointer ${signature.fixed ? 'opacity-50' : ''}`}
+                              style={{ left: signature.x, top: signature.y }}
                             >
-                              <div
-                                className={`absolute z-50 p-2 flex flex-col bg-white/50 border-2 border-dashed border-gray-300
-                                rounded shadow-md cursor-pointer ${signature.fixed ? 'opacity-50' : ''}`}
-                              >
-                                <span className="font-bold">{signature.name}</span> <span>{signature.email}</span>
-                              </div>
-                            </Draggable>
+                              <SignatoryCard signatory={signature} selectedType={selectedType} />
+                            </div>
+                          </Draggable>
                           );
                         })}
                       <Page className="z-10" renderTextLayer={false} pageNumber={pageNumber} />
