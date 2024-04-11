@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Draggable, Droppable } from "react-beautiful-dnd";
+
 import { v4 as uuidv4 } from 'uuid';
 
 
@@ -31,10 +31,10 @@ return (
 export const SignatoriesList = ({ signatories, onSubmit, onTypeSelect }) => {
   const [selectedTypes, setSelectedTypes] = useState({});
 
-  const handleCardClick = (signatory, type) => {
+  const handleCardClick = (signatoryId, type) => {
     if (type) {
-      onSubmit([...signatories, { ...signatory, type }]);
-      setSelectedTypes({ ...selectedTypes, [signatory.id]: type });
+      setSelectedTypes({ ...selectedTypes, [signatoryId]: type });
+      onTypeSelect(type);
     }
   };
 
@@ -43,38 +43,33 @@ export const SignatoriesList = ({ signatories, onSubmit, onTypeSelect }) => {
     onSubmit(updatedSignatories);
   };
 
-  const handleTypeSelect = (signatoryId, type) => {
-    setSelectedTypes({ ...selectedTypes, [signatoryId]: type });
-    onTypeSelect(type); 
-  };
-
   return (
     <div className="mt-4">
       <h2 className="mb-2 text-lg font-semibold">Signatários Adicionados:</h2>
       <div className="flex mb-2">
-         <button
+        <button
           className={`mr-2 px-3 py-1 rounded border ${selectedTypes['rubrica'] ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-          onClick={() => handleTypeSelect('rubrica')}
+          onClick={() => onTypeSelect('rubrica')}
         >
           Rubrica
         </button>
         <button
           className={`px-3 py-1 rounded border ${selectedTypes['texto'] ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-          onClick={() => handleTypeSelect('texto')}
+          onClick={() => onTypeSelect('texto')}
         >
           Texto
         </button>
       </div>
       <ul className="flex flex-col w-full p-2 rounded shadow-lg">
         {signatories.map((signatory, index) => (
-      <SignatoryCard
-      key={index}
-      signatory={signatory}
-      selectedType={selectedTypes[signatory.id] || null}
-      onCardClick={(type) => handleCardClick(signatory.id, type)}
-      onTypeSelect={(type) => handleTypeSelect(signatory.id, type)}
-      onRemove={() => handleRemoveSignatory(index)}
-    />
+          <SignatoryCard
+            key={index}
+            signatory={signatory}
+            selectedType={selectedTypes[signatory.id] || null}
+            onCardClick={(type) => handleCardClick(signatory.id, type)}
+            onTypeSelect={(type) => setSelectedTypes({ ...selectedTypes, [signatory.id]: type })}
+            onRemove={() => handleRemoveSignatory(index)}
+          />
         ))}
       </ul>
     </div>
@@ -85,6 +80,10 @@ export const SignatoryCard = ({ signatory, selectedType, onCardClick, onTypeSele
   console.log(selectedType)
   return (
     <li className="flex items-center justify-between gap-2 p-2 mb-2 border-2 border-dashed cursor-pointer">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
+</svg>
+
        <div onClick={onCardClick ? () => onCardClick(signatory.id, selectedType) : undefined}>
         <span className="font-bold">{selectedType === 'rubrica' ? 'Rubrica:' : 'Texto:'}</span> {selectedType === 'rubrica' ? getInitials(signatory.name) : signatory.name}
       </div>

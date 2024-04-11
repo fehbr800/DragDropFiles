@@ -24,6 +24,11 @@ export default function Home() {
     setPdfSignatures([]);
   };
 
+  const handleAddSignature = (signature) => {
+    const updatedSignatures = [...pdfSignatures, signature];
+    setPdfSignatures(updatedSignatures);
+  };
+
   const handleSelectType = (type) => {
     setSelectedType(type);
   };
@@ -36,7 +41,7 @@ export default function Home() {
       </div>
 
       <div className="p-4 rounded-lg shadow">
-        <DropZoneComponent pdfFile={pdfFile} signatures={pdfSignatures} onDrop={handleDrop} selectedType={selectedType} />
+        <DropZoneComponent pdfFile={pdfFile} signatures={pdfSignatures} onAddSignature={handleAddSignature} onDrop={handleDrop} selectedType={selectedType} />
       </div>
     </main>
   );
