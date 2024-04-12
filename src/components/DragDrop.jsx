@@ -144,7 +144,7 @@ console.log(selectedType)
           </div>
         ))}
         {showPDF && (
-          <div className="pdf-container" ref={containerRef}>
+          <div className="overflow-hidden pdf-container" ref={containerRef}>
             <Document file={pdfFile} onLoadSuccess={({ numPages }) => setNumPages(numPages)}>
               {Array.from(new Array(numPages), (_, pageIndex) => (
                 <div key={`page_${pageIndex + 1}`}>
@@ -155,6 +155,7 @@ console.log(selectedType)
                           console.log(`Posição: x=${signature.x}, y=${signature.y}, Página: ${pageNumber}`);
                           return (
                             <Draggable
+                           bounds="parent"
                             key={`signature_${index}`}
                             defaultPosition={{ x: 0, y: 0 }}
                             onStop={(e, data) => handleDragStop(pageNumber, e, data, index)}
@@ -163,9 +164,9 @@ console.log(selectedType)
                             <div
                               className={`absolute z-50 p-2 flex flex-col 
                                cursor-pointer ${signature.fixed ? 'opacity-50' : ''}`}
-                              style={{ left: signature.x, top: signature.y }}
+                              style={{ }}
                             >
-                              <SignatoryCard signatory={signature} selectedType={selectedType} />
+                              <SignatoryCard signatory={signature} selectedType={'rubrica'} />
                             </div>
                           </Draggable>
                           );
