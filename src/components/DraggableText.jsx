@@ -4,7 +4,7 @@ import { cleanBorder, errorColor, goodColor, primary45 } from "../utils/colors";
 import { useState, useEffect, useRef } from "react";
 
 export default function DraggableText({ onEnd, onSet, onCancel, initialText }) {
-  const [text, setText] = useState(initialText || "Text");
+  const [text, setText] = useState(initialText || "Assinatura");
   const [confirmed, setConfirmed] = useState(false);
   const inputRef = useRef(null);
 
@@ -33,7 +33,7 @@ export default function DraggableText({ onEnd, onSet, onCancel, initialText }) {
   };
 
   return (
-    <Draggable onStop={onEnd}>
+    <Draggable  onStop={onEnd}>
       <div className="absolute z-50 p-2 border-2 rounded-lg border-primary-400">
         <div className="absolute flex gap-2 right-1 top-4">
           <button className="text-green-500/40" onClick={handleSet}>
@@ -47,7 +47,7 @@ export default function DraggableText({ onEnd, onSet, onCancel, initialText }) {
           ref={inputRef}
           className={`p-1 text-lg bg-transparent border-0 cursor-${confirmed ? "default" : "move"} focus:outline-none`}
           value={text}
-          placeholder="Text"
+          placeholder="Assinatura"
           onChange={(e) => setText(e.target.value)}
           onDoubleClick={handleDoubleClick}
           onClick={handleClick}
