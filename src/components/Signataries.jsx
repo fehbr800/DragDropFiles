@@ -1,38 +1,27 @@
 import { useRef, useState } from "react";
-import DraggableText from "./DraggableText";
+import DraggableText, { DraggableSignatory } from "./DraggableText";
 import { PDFDocument } from "pdf-lib";
 import { blobToURL } from "@/utils/utils";
+import dayjs from "dayjs";
 
 
 export default function SignatoryForm({ addSignatory }) {
   const [name, setName] = useState('');
-  const [position, setPositionState] = useState(null);
-  const documentRef = useRef(null);
+  const [email, setEmail] = useState('');
   const [signatories, setSignatories] = useState([]);
   const [signatoryHistory, setSignatoryHistory] = useState([]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (name && position) {
-      const newSignatory = { name, position };
+    if (name && email) {
+      const newSignatory = { name, email };
       setSignatories([...signatories, newSignatory]);
       setSignatoryHistory([...signatoryHistory, newSignatory]);
       addSignatory(newSignatory);
       setName('');
-      setPositionState('');
+      setEmail('');
     } else {
-     console.error('Por favor, preencha todos os campos');
-    }
-  };
-
-  const handleSet = async (text, x, y) => {
-    if (documentRef.current && signatories.length > 0) {
-      const newSignatory = { name: text, position: { x, y } };
-      setSignatories([...signatories, newSignatory]);
-      setSignatoryHistory([...signatoryHistory, newSignatory]);
-      addSignatory(newSignatory);
-    } else {
-      console.error('Document reference or signatories are not available.');
+      console.error('Por favor, preencha todos os campos');
     }
   };
 
@@ -48,15 +37,15 @@ export default function SignatoryForm({ addSignatory }) {
           <input 
             className="px-2 py-2 mx-2 border border-gray-300 rounded-lg"
             type="email" 
-            value={position} 
-            onChange={(e) => setPositionState(e.target.value)} 
+            value={email} 
+            onChange={(e) => setEmail(e.target.value)} 
           />
         </label>
         <button className="px-4 py-2 my-2 text-white transition duration-150 ease-out bg-indigo-500 rounded-lg hover:bg-indigo-600" type="submit">Adicionar Signatário</button>
       </form>
-
     </div>
   );
+
 }
 
 
@@ -92,61 +81,95 @@ export function SignatoryHistory({ signatoryHistory, onClick, documentRef , onCa
   );
 }
 
-export function SignatoryContainer({ signatories,onClick, textInputVisible, documentRef, setTextInputVisible, pdf, pageNum, pageDetails, setPosition, setPdf, position, onCancel }) {
+export function SignatoryContainer({ signatories, onClick, textInputVisible, documentRef, setTextInputVisible, pdf, pageNum, pageDetails, setPosition, setPdf, position, onCancel }) {
+  const [selectedSignatory, setSelectedSignatory] = useState(null); 
+  console.log(position)
+
+  const handleSignatoryClick = (signatory) => {
+    setSelectedSignatory(signatory);
+  };
+
+  const handleCancel = () => {
+    setSelectedSignatory(null); 
+  };
+
+
+  const handleSetSignatory = async (text) => {
+    if (selectedSignatory && position) {
+      const { originalHeight, originalWidth } = pageDetails;
+      const scale = originalWidth / documentRef.current.clientWidth;
+  
+      const y =
+        documentRef.current.clientHeight -
+        (position.y +
+          (12 * scale) -
+          position.offsetY -
+          documentRef.current.offsetTop);
+      const x =
+        position.x -
+        166 -
+        position.offsetX -
+        documentRef.current.offsetLeft;
+  
+      const newY =
+        (y * originalHeight) / documentRef.current.clientHeight;
+      const newX =
+        (x * originalWidth) / documentRef.current.clientWidth;
+  
+      const pdfDoc = await PDFDocument.load(pdf);
+  
+      const pages = pdfDoc.getPages();
+      const firstPage = pages[pageNum];
+  
+      if (typeof text === 'string') {
+        // Execute o código para desenhar o texto no PDF
+        firstPage.drawText(text, {
+          x: newX,
+          y: newY,
+          size: 20 * scale,
+        });
+      } else {
+        console.error('O texto não é uma string válida:', text);
+      }
+  
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([new Uint8Array(pdfBytes)]);
+  
+      const URL = await blobToURL(blob);
+        setPdf(URL);
+        setPosition(null);
+
+        // Verifica se setTextInputVisible é uma função válida antes de chamar
+        if (typeof setTextInputVisible === 'function') {
+          setTextInputVisible(false);
+        } else {
+          console.error('setTextInputVisible não é uma função válida');
+        }
+      }
+  };
+
   return (
-    <div className="flex flex-col bg-white rounded-lg">
-      {signatories.map((signatory, index) => (
-        <DraggableText
-          key={index}
-          initialText={`${signatory.name}, ${signatory.position}`}
-          onEnd={setPosition}
-          onCancel={() => onClick()}
-          onSet={async (text) => {
-            if (position !== null) {
-              const { originalHeight, originalWidth } = pageDetails;
-              const scale = originalWidth / documentRef.current.clientWidth;
-
-              const y =
-                documentRef.current.clientHeight -
-                (position.y +
-                  (12 * scale) -
-                  position.offsetY -
-                  documentRef.current.offsetTop);
-              const x =
-                position.x -
-                166 -
-                position.offsetX -
-                documentRef.current.offsetLeft;
-
-              const newY =
-                (y * originalHeight) / documentRef.current.clientHeight;
-              const newX =
-                (x * originalWidth) / documentRef.current.clientWidth;
-
-              const pdfDoc = await PDFDocument.load(pdf);
-
-              const pages = pdfDoc.getPages();
-              const firstPage = pages[pageNum];
-
-              firstPage.drawText(text, {
-                x: newX,
-                y: newY,
-                size: 20 * scale,
-              });
-
-              const pdfBytes = await pdfDoc.save();
-              const blob = new Blob([new Uint8Array(pdfBytes)]);
-
-              const URL = await blobToURL(blob);
-              setPdf(URL);
-              setPosition(null);
-            
-            } else {
-              console.error("Position is null. Cannot set text.");
-            }
-          }}
-        />
-      ))}
-    </div>
+    <div className="grid grid-cols-1 gap-4">
+    {signatories.map((signatory, index) => (
+      <div key={index} className="p-4 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200" onClick={() => handleSignatoryClick(signatory)}>
+        <div className="text-lg font-semibold">Nome: {signatory.name}</div>
+        <div className="text-lg font-semibold">Email: {signatory.email}</div>
+      
+      </div>
+    ))}
+    {selectedSignatory && (
+      <DraggableSignatory
+      onEnd={setPosition}
+        onCancel={handleCancel}
+        onSet={handleSetSignatory}
+        signatory={selectedSignatory}
+        initialText={
+          textInputVisible && selectedSignatory === 'date'
+            ? dayjs().format('MM/d/YYYY')
+            : null
+        }
+      />
+    )}
+  </div>
   );
 }

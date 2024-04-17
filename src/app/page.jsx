@@ -104,11 +104,11 @@ return (
                   setPosition={setPosition} setPdf={setPdf} />
                   
 
-                  <SignatoryHistory
+                  {/* <SignatoryHistory
                   signatoryHistory={signatories}
                   handleSet={handleSet}
-                />
-                 {/* <SignatoryContainer
+                /> */}
+                 <SignatoryContainer
                   textInputVisible={textInputVisible}
                   onClick={() => setTextInputVisible(false)}
                   signatories={signatories}
@@ -121,7 +121,7 @@ return (
                   setPosition={setPosition}
                   setPdf={setPdf}
                 />
-           */}
+          
                 <BigButton marginRight={8} title={"Adicionar Assinatura"} onClick={()=> setTextInputVisible(true)}
                   />
 
