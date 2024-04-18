@@ -3,20 +3,22 @@ import DraggableText, { DraggableSignatory } from "./DraggableText";
 import { PDFDocument } from "pdf-lib";
 import { blobToURL } from "@/utils/utils";
 import dayjs from "dayjs";
+import { v4 as uuidv4 } from 'uuid'; 
+import { TrashIcon } from "@heroicons/react/24/outline";
 
 
 export default function SignatoryForm({ addSignatory }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [signatories, setSignatories] = useState([]);
-  const [signatoryHistory, setSignatoryHistory] = useState([]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (name && email) {
-      const newSignatory = { name, email };
-      setSignatories([...signatories, newSignatory]);
-      setSignatoryHistory([...signatoryHistory, newSignatory]);
+      const newSignatory = {
+        id: uuidv4(), 
+        name,
+        email
+      };
       addSignatory(newSignatory);
       setName('');
       setEmail('');
@@ -45,131 +47,64 @@ export default function SignatoryForm({ addSignatory }) {
       </form>
     </div>
   );
-
 }
 
 
-export function SignatoryHistory({ signatoryHistory, onClick, documentRef , onCancel, onEnd }) {
-  const handleClick = (text) => {
-    onClick(text);
-  };
 
-  const isDuplicate = (text) => {
-    return signatoryHistory.some((signatory) => {
-      return `${signatory.name}, ${signatory.position}` === text;
-    });
-  };
 
-  return (
-    <div className="flex flex-col bg-white rounded-lg">
-      <h2 className="px-4 py-2 text-lg font-semibold">Signatários:</h2>
-      {signatoryHistory.map((signatory, index) => (
-        <div
-          key={index}
-          className="px-4 py-2 border-t border-gray-200 cursor-pointer hover:bg-gray-100"
-          onClick={() => {
-            const text = `${signatory.name}, ${signatory.position}`;
-            if (!isDuplicate(text)) {
-              handleClick(text);
-            }
-          }}
-        >
-          {`${signatory.name}, ${signatory.position}`}
-        </div>
-      ))}
-    </div>
-  );
-}
 
-export function SignatoryContainer({ signatories, onClick, textInputVisible, documentRef, setTextInputVisible, pdf, pageNum, pageDetails, setPosition, setPdf, position, onCancel }) {
-  const [selectedSignatory, setSelectedSignatory] = useState(null); 
-  console.log(position)
 
+export function SignatoryContainer({ signatories, onClick, textInputVisible, documentRef, setTextInputVisible, pdf, pageNum, pageDetails, setPosition, setPdf, position, onDelete, onDigitalSignature, onInitials  }) {
+  const [selectedSignatory, setSelectedSignatory] = useState(null);
+  const [selectedButton, setSelectedButton] = useState(null);
+  
   const handleSignatoryClick = (signatory) => {
     setSelectedSignatory(signatory);
+    if (onClick) onClick();
   };
 
-  const handleCancel = () => {
-    setSelectedSignatory(null); 
+  const handleDeleteSignatory = (index) => {
+    if (onDelete) onDelete(index);
   };
 
 
-  const handleSetSignatory = async (text) => {
-    if (selectedSignatory && position) {
-      const { originalHeight, originalWidth } = pageDetails;
-      const scale = originalWidth / documentRef.current.clientWidth;
-  
-      const y =
-        documentRef.current.clientHeight -
-        (position.y +
-          (12 * scale) -
-          position.offsetY -
-          documentRef.current.offsetTop);
-      const x =
-        position.x -
-        166 -
-        position.offsetX -
-        documentRef.current.offsetLeft;
-  
-      const newY =
-        (y * originalHeight) / documentRef.current.clientHeight;
-      const newX =
-        (x * originalWidth) / documentRef.current.clientWidth;
-  
-      const pdfDoc = await PDFDocument.load(pdf);
-  
-      const pages = pdfDoc.getPages();
-      const firstPage = pages[pageNum];
-  
-      if (typeof text === 'string') {
-        // Execute o código para desenhar o texto no PDF
-        firstPage.drawText(text, {
-          x: newX,
-          y: newY,
-          size: 20 * scale,
-        });
-      } else {
-        console.error('O texto não é uma string válida:', text);
-      }
-  
-      const pdfBytes = await pdfDoc.save();
-      const blob = new Blob([new Uint8Array(pdfBytes)]);
-  
-      const URL = await blobToURL(blob);
-        setPdf(URL);
-        setPosition(null);
-
-        // Verifica se setTextInputVisible é uma função válida antes de chamar
-        if (typeof setTextInputVisible === 'function') {
-          setTextInputVisible(false);
-        } else {
-          console.error('setTextInputVisible não é uma função válida');
-        }
-      }
+  const handleDigitalSignature = (signatory) => {
+    signatory.signatureType = 'Assinatura Digital';
   };
+
+  const handleInitials = (signatory) => {
+    signatory.signatureType = 'Rubrica';
+  };
+
+  const remainingSlots = 5 - signatories.length;
+  const isLimitReached = remainingSlots <= 0;
 
   return (
-    <div className="grid grid-cols-1 gap-4">
-    {signatories.map((signatory, index) => (
-      <div key={index} className="p-4 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200" onClick={() => handleSignatoryClick(signatory)}>
-        <div className="text-lg font-semibold">Nome: {signatory.name}</div>
-        <div className="text-lg font-semibold">Email: {signatory.email}</div>
-      
-      </div>
-    ))}
-    {selectedSignatory && (
-      <DraggableSignatory
-      onEnd={setPosition}
-        onCancel={handleCancel}
-        onSet={handleSetSignatory}
-        signatory={selectedSignatory}
-        initialText={
-          textInputVisible && selectedSignatory === 'date'
-            ? dayjs().format('MM/d/YYYY')
-            : null
-        }
-      />
-    )}
+<div className="grid grid-cols-1 gap-4">
+  {isLimitReached && (
+    <div className="p-4 text-red-800 bg-red-200 rounded-lg">
+      Limite de 5 signatários atingido. Não é possível adicionar mais. {signatories.length} / 5
+    </div>
+  )}
+  <div className="flex justify-end">
+     Assinantes disponiveis {signatories.length}/5
   </div>
+  {signatories.map((signatory, index) => (
+    <div key={index} className="relative p-4 bg-white rounded-lg shadow-md cursor-pointer" onClick={() => handleSignatoryClick(signatory)}>
+      <div className="flex items-center justify-center">
+        <div className="text-lg font-semibold text-center">Assinante {index + 1}</div>
+        <button className="absolute top-0 mt-1 mr-1 text-red-400 right-1 hover:text-red-600 focus:outline-none" onClick={() => handleDeleteSignatory(index)}>
+          <TrashIcon className="w-5 h-5" />
+        </button>
+      </div>
+      <div className="text-lg font-semibold">{signatory.name}</div>
+      <div className="text-lg font-semibold">{signatory.email}</div>
+      <div className="flex gap-4">
+      <button className={`p-2 font-medium text-gray-600 rounded-lg shadow-md hover:bg-gray-100 ${signatory.signatureType === 'Assinatura Digital' ? 'bg-gray-200' : ''}`} onClick={() => handleDigitalSignature(signatory)}>Assinatura Digital</button>
+            <button className={`p-2 font-medium text-gray-600 rounded-lg shadow-md hover:bg-gray-100 ${signatory.signatureType === 'Rubrica' ? 'bg-gray-200' : ''}`} onClick={() => handleInitials(signatory)}>Rubrica</button>
+      </div>
+    </div>
+  ))}
+</div>
   );
 }

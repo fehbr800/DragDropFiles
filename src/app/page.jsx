@@ -9,7 +9,7 @@ import dayjs from "dayjs";
 import Drop from "@/components/DragDrop";
 import { AddSigDialog } from "@/components/AddSigDialog";
 import { BigButton } from "@/components/Button";
-import DraggableText from "@/components/DraggableText";
+import DraggableText, { DraggableSignatory } from "@/components/DraggableText";
 import DraggableSignature from "@/components/DraggableSignature";
 import PagingControl from "@/components/PagingControl";
 import { blobToURL } from "@/utils/utils";
@@ -53,18 +53,49 @@ const [signatureURL, setSignatureURL] = useState(null);
 const [position, setPosition] = useState(null);
 const [signatureDialogVisible, setSignatureDialogVisible] = useState(false);
 const [textInputVisible, setTextInputVisible] = useState(false);
+const [selectedSignatory, setSelectedSignatory] = useState(false);
 const [pageNum, setPageNum] = useState(0);
 const [totalPages, setTotalPages] = useState(0);
 const [pageDetails, setPageDetails] = useState(null);
 const [signatories, setSignatories] = useState([]);
 const documentRef = useRef(null);
 const [selectedText, setSelectedText] = useState('')
+const [editingIndex, setEditingIndex] = useState(-1);
 
 const addSignatory = (signatory) => {
-setSignatories([...signatories, signatory]); // Adiciona o novo signatário ao estado de signatários
+  if (signatories.length < 5) {
+    setSignatories([...signatories, signatory]);
+  } else {
+    console.log("Limite de 5 signatários atingido. Não é possível adicionar mais.");
+  }
 };
+
+const handleEditSignatory = (index) => {
+  setEditingIndex(index);
+  const signatoryToEdit = signatories[index];
+  console.log("Editar signatário:", signatoryToEdit);
+
+};
+
+const handleDeleteSignatory = (index) => {
+  const updatedSignatories = [...signatories];
+  updatedSignatories.splice(index, 1);
+
+  setSignatories(updatedSignatories);
+  console.log("Excluir signatário:", signatories[index]);
+
+};
+
 const handleSet = (text) => {
   setSelectedText(text);
+};
+
+const handleSignatoryClick = (signatory) => {
+  setSelectedSignatory(signatory); 
+};
+
+const handleCancel = () => {
+  setSelectedSignatory(null); 
 };
 
 
@@ -102,30 +133,28 @@ return (
                 /> */}
                 <SignatoryForm addSignatory={addSignatory} pdf={pdf} pageNum={pageNum} pageDetails={pageDetails}
                   setPosition={setPosition} setPdf={setPdf} />
-                  
 
-                  {/* <SignatoryHistory
-                  signatoryHistory={signatories}
-                  handleSet={handleSet}
-                /> */}
-                 <SignatoryContainer
-                  textInputVisible={textInputVisible}
-                  onClick={() => setTextInputVisible(false)}
-                  signatories={signatories}
-                  position={position}
-                  documentRef={documentRef}
-                  addSignatory={addSignatory}
-                  pdf={pdf}
-                  pageNum={pageNum}
-                  pageDetails={pageDetails}
-                  setPosition={setPosition}
-                  setPdf={setPdf}
-                />
-          
-                <BigButton marginRight={8} title={"Adicionar Assinatura"} onClick={()=> setTextInputVisible(true)}
-                  />
+                <SignatoryContainer
+                signatories={signatories}
+                onClick={() => setSelectedSignatory(true)}
+                onEdit={handleEditSignatory}
+                onDelete={handleDeleteSignatory}
+                
+              />
+                {/* <BigButton marginRight={8} title={"Adicionar Assinatura"} onClick={()=> setTextInputVisible(true)}
+                  /> */}
 
-                  <BigButton marginRight={8} title={"Resetar"} onClick={()=> {
+                 
+                    {/* {pdf ? (
+                    <BigButton marginRight={8} inverted={true} title={"Download"} onClick={()=> {
+                      downloadURI(pdf, "file.pdf");
+                      }}
+                      />
+                      ) : null} */}
+          </div>
+          <div ref={documentRef} className="rounded-md shadow-md parent">
+            <div className="flex justify-end">
+            <BigButton marginRight={8} title={"X"} onClick={()=> {
                     setTextInputVisible(false);
                     setSignatureDialogVisible(false);
                     setSignatureURL(null);
@@ -135,14 +164,67 @@ return (
                     setPageDetails(null);
                     }}
                     />
-                    {pdf ? (
-                    <BigButton marginRight={8} inverted={true} title={"Download"} onClick={()=> {
-                      downloadURI(pdf, "file.pdf");
-                      }}
-                      />
-                      ) : null}
-          </div>
-          <div ref={documentRef} style={styles.documentBlock}>
+            </div>
+         
+          {selectedSignatory ? (
+            signatories.map((signatory, index) => (
+              <DraggableSignatory
+              index={index}
+                key={index}
+                initialText={
+                  textInputVisible && selectedSignatory === 'date'
+                    ? dayjs().format('MM/d/YYYY')
+                    : null
+                }
+                signatory={signatory}
+                onCancel={handleCancel}
+                onEnd={setPosition}
+                onSet={async (name) => {
+                  if (selectedSignatory ) {
+                    const { originalHeight, originalWidth } = pageDetails;
+                    const scale = originalWidth / documentRef.current.clientWidth;
+
+                    const y =
+                      documentRef.current.clientHeight -
+                      (position.y +
+                        (12 * scale) -
+                        position.offsetY -
+                        documentRef.current.offsetTop);
+                    const x =
+                      position.x -
+                      166 -
+                      position.offsetX -
+                      documentRef.current.offsetLeft;
+
+                    const newY =
+                      (y * originalHeight) / documentRef.current.clientHeight;
+                    const newX =
+                      (x * originalWidth) / documentRef.current.clientWidth;
+
+                    const pdfDoc = await PDFDocument.load(pdf);
+
+                    const pages = pdfDoc.getPages();
+                    const firstPage = pages[pageNum];
+
+                    firstPage.drawText(name, {
+                      x: newX,
+                      y: newY,
+                      size: 20 * scale,
+                      });
+
+                    const pdfBytes = await pdfDoc.save();
+                    const blob = new Blob([new Uint8Array(pdfBytes)]);
+
+                    const URL = await blobToURL(blob);
+                    setPdf(URL);
+                    setPosition(null);
+                    setTextInputVisible(false);
+                    setSelectedSignatory(null);
+                  }
+                }}
+              />
+            ))
+          ) : null}
 
 
             {textInputVisible ? (
@@ -259,11 +341,13 @@ return (
                 onEnd={setPosition}
                 />
                 ) : null}
+
+
                 <Document file={pdf} onLoadSuccess={(data)=> {
                   setTotalPages(data.numPages);
                   }}
                   >
-                  <Page pageNumber={pageNum + 1} renderTextLayer={false} className="flex" onLoadSuccess={(data)=> {
+                  <Page pageNumber={pageNum + 1} width={800}  height={1200} renderTextLayer={false}  onLoadSuccess={(data)=> {
                     setPageDetails(data);
                     }}
                     />
@@ -273,6 +357,7 @@ return (
 
         </div>
         ) : null}
+    
   </div>
 </div>
 );

@@ -62,17 +62,18 @@ export default function DraggableText({ onEnd, onSet, onCancel, initialText }) {
 
 
 
-export  function DraggableSignatory({ onEnd, onCancel, onSet, signatory }) {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signatory, index }) {
+  console.log(signatory);
   const [confirmed, setConfirmed] = useState(false);
-  const [name, setName] = useState(signatory.name || "");
+  const [name, setName] = useState(initialText || signatory.name || "Nome");
   const [email, setEmail] = useState(signatory.email || "");
+
   const inputRef = useRef(null);
 
   useEffect(() => {
     if (!signatory.name) {
       inputRef.current.focus();
-      inputRef.current.select();
+      selectText(inputRef.current);
     }
   }, [signatory.name]);
 
@@ -86,17 +87,46 @@ export  function DraggableSignatory({ onEnd, onCancel, onSet, signatory }) {
     }
   };
 
-  const handleSet = () => {
+  const handleSet = async () => {
     if (!confirmed) {
-      onSet({ name, email, position });
-      setConfirmed(true);
+      if (typeof name === 'string' && name.trim().length > 0) {
+        onSet(name); 
+        setConfirmed(true);
+      } else {
+        console.error('O nome não é uma string válida ou está vazio:', name);
+      }
     }
+  };
+
+  const selectText = (element) => {
+    const selection = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    selection.removeAllRanges();
+    selection.addRange(range);
   };
 
   return (
     <Draggable onStop={onEnd}>
-      <div className="absolute z-50 p-2 border-2 rounded-lg border-primary-400">
-        <div className="absolute flex gap-2 right-1 top-4">
+    <div className="absolute z-50 p-2 border-2 rounded-lg border-primary-400">
+      <div className="flex items-start justify-between gap-4">
+        <div
+          ref={inputRef}
+          className={`p-1 relative text-lg bg-transparent cursor-${confirmed ? "default" : "move"} focus:outline-none`}
+          onDoubleClick={handleDoubleClick}
+          onClick={handleClick}
+          contentEditable={confirmed}
+        >
+          <div className="text-sm text-gray-500">
+            {signatory.signatureType && `${signatory.signatureType}`}
+          </div>
+          <div className="text-sm text-gray-500">
+            {email}
+          </div>
+          
+        </div>
+
+        <div className="flex mx-2">
           <button className="text-green-500/40" onClick={handleSet}>
             <CheckIcon className="w-5 h-5" />
           </button>
@@ -104,26 +134,12 @@ export  function DraggableSignatory({ onEnd, onCancel, onSet, signatory }) {
             <TrashIcon className="w-5 h-5" />
           </button>
         </div>
-        <input
-          ref={inputRef}
-          className={`p-1 text-lg bg-transparent border-0 cursor-${confirmed ? "default" : "move"} focus:outline-none`}
-          value={name}
-          placeholder="Nome"
-          onChange={(e) => setName(e.target.value)}
-          onDoubleClick={handleDoubleClick}
-          onClick={handleClick}
-          readOnly={confirmed}
-        />
-        {/* <input
-          className={`p-1 text-lg bg-transparent border-0 cursor-${confirmed ? "default" : "move"} focus:outline-none`}
-          value={email}
-          placeholder="Email"
-          onChange={(e) => setEmail(e.target.value)}
-          onDoubleClick={handleDoubleClick}
-          onClick={handleClick}
-          readOnly={confirmed}
-        /> */}
+       
       </div>
-    </Draggable>
+      <div className="absolute -top-3 -right-[0.8rem] flex items-center py-1 px-2 text-sm text-gray-400 bg-white rounded-lg shadow-md">
+        {index + 1}
+      </div>
+    </div>
+  </Draggable>
   );
 }
