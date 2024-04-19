@@ -54,9 +54,11 @@ export default function SignatoryForm({ addSignatory }) {
 
 
 
-export function SignatoryContainer({ signatories, onClick, textInputVisible, documentRef, setTextInputVisible, pdf, pageNum, pageDetails, setPosition, setPdf, position, onDelete, onDigitalSignature, onInitials  }) {
+export function SignatoryContainer({ signatories, onClick, textInputVisible, documentRef, setTextInputVisible, pdf, pageNum, pageDetails, setPosition, setPdf, position, onDelete  }) {
   const [selectedSignatory, setSelectedSignatory] = useState(null);
   const [selectedButton, setSelectedButton] = useState(null);
+
+  console.log(signatories)
   
   const handleSignatoryClick = (signatory) => {
     setSelectedSignatory(signatory);
@@ -99,12 +101,70 @@ export function SignatoryContainer({ signatories, onClick, textInputVisible, doc
       </div>
       <div className="text-lg font-semibold">{signatory.name}</div>
       <div className="text-lg font-semibold">{signatory.email}</div>
-      <div className="flex gap-4">
-      <button className={`p-2 font-medium text-gray-600 rounded-lg shadow-md hover:bg-gray-100 ${signatory.signatureType === 'Assinatura Digital' ? 'bg-gray-200' : ''}`} onClick={() => handleDigitalSignature(signatory)}>Assinatura Digital</button>
-            <button className={`p-2 font-medium text-gray-600 rounded-lg shadow-md hover:bg-gray-100 ${signatory.signatureType === 'Rubrica' ? 'bg-gray-200' : ''}`} onClick={() => handleInitials(signatory)}>Rubrica</button>
+      <div className="flex w-full gap-4">
+      <button className={`py-2 px-1 font-medium text-gray-600 w-40 rounded-lg shadow-md hover:bg-gray-100 ${signatory.signatureType === 'Assinatura Digital' ? 'bg-gray-200' : ''}`} onClick={() => handleDigitalSignature(signatory)}>Assinatura Digital</button>
+      <button className={`py-2 px-1 font-medium text-gray-600 w-40 rounded-lg shadow-md hover:bg-gray-100 ${signatory.signatureType === 'Rubrica' ? 'bg-gray-200' : ''}`} onClick={() => handleInitials(signatory)}>Rubrica</button>
       </div>
     </div>
   ))}
+
+{selectedSignatory && (
+        <DraggableSignatory
+          index={signatories.indexOf(selectedSignatory)}
+          initialText={
+            textInputVisible && selectedSignatory === 'date'
+              ? dayjs().format('MM/d/YYYY')
+              : null
+          }
+          signatory={selectedSignatory}
+          onCancel={() => setSelectedSignatory(null)}
+          onEnd={setPosition}
+          onSet={async (name) => {
+            if (selectedSignatory ) {
+              const { originalHeight, originalWidth } = pageDetails;
+              const scale = originalWidth / documentRef.current.clientWidth;
+
+              const y =
+                documentRef.current.clientHeight -
+                (position.y +
+                  (220 * scale) -
+                  position.offsetY -
+                  documentRef.current.offsetTop);
+              const x =
+                position.x -
+                16 -
+                position.offsetX -
+                documentRef.current.offsetLeft;
+
+              const newY =
+                (y * originalHeight) / documentRef.current.clientHeight;
+              const newX =
+                (x * originalWidth) / documentRef.current.clientWidth;
+
+
+              const pdfDoc = await PDFDocument.load(pdf);
+
+              const pages = pdfDoc.getPages();
+              const firstPage = pages[pageNum];
+             
+              firstPage.drawText(name, {
+                x: newX,
+                y: newY,
+                size: 20 * scale,
+                });
+
+              const pdfBytes = await pdfDoc.save();
+              const blob = new Blob([new Uint8Array(pdfBytes)]);
+
+              const URL = await blobToURL(blob);
+              setPdf(URL);
+              setPosition(null);
+            
+              setSelectedSignatory(null);
+            }
+          }}
+        />
+)}
 </div>
   );
 }

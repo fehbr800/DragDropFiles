@@ -30,9 +30,18 @@ export default function Drop({ onLoaded }) {
   });
 
   return (
-    <div {...getRootProps()} style={styles.container}>
-      <input {...getInputProps()} />
-      {isDragActive ? <p>Solte o PDF aqui</p> : <p>Adicione um arquivo PDF aqui</p>}
-    </div>
+<div
+  {...getRootProps()}
+  className={`border-2 rounded-lg p-4 ${
+    isDragActive ? 'border-purple-600 bg-purple-100' : 'border-gray-300 bg-white'
+  }`}
+>
+  <input {...getInputProps()} />
+  {isDragActive ? (
+    <p className="text-purple-600">Solte o PDF aqui</p>
+  ) : (
+    <p className="text-gray-600">Adicione um arquivo PDF aqui</p>
+  )}
+</div>
   );
 }
