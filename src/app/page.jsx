@@ -122,6 +122,7 @@ const handleSaveAndContinue = async () => {
     email: signatory.email,
     signatureType: signatory.signatureType,
     signature: signatory.signature,
+    signaturePosition: signatory.position,
   
   }));
 
@@ -133,18 +134,19 @@ const handleSaveAndContinue = async () => {
 
     const textX = 50;
     let textY = firstPage.getHeight() - 50;
+    
 
-    for (const signatoryData of signatoriesData) {
-      firstPage.drawText(signatoryData.name, {
-        x: textX,
-        y: textY,
-        size: 12,
-        color: rgb(0, 0, 0), 
-      });
+    // for (const signatoryData of signatoriesData) {
+    //   firstPage.drawText(signatoryData.name, {
+    //     x: textX,
+    //     y: textY,
+    //     size: 12,
+    //     color: rgb(0, 0, 0), 
+    //   });
 
     
-      textY -= 20; 
-    }
+    //   textY -= 20; 
+    // }
 
 
     const pdfBytes = await pdfDoc.save();
@@ -174,7 +176,7 @@ const arrayBufferToBase64 = (buffer) => {
 
 
 return (
-<div className="container flex items-center justify-center mx-auto ">
+<div className="container flex items-center justify-center min-h-screen mx-auto">
 
   <div className="">
 
@@ -207,7 +209,7 @@ return (
 
               {/* <BigButton marginRight={8} title={"Add Date"} onClick={()=> setTextInputVisible("date")}
                 /> */}
-                <SignatoryForm addSignatory={addSignatory} pdf={pdf} pageNum={pageNum} pageDetails={pageDetails}
+                <SignatoryForm addSignatory={addSignatory} signatories={signatories} pdf={pdf} pageNum={pageNum} pageDetails={pageDetails}
                   setPosition={setPosition} setPdf={setPdf} />
 
                 <SignatoryContainer

@@ -16,11 +16,13 @@ export function BigButton({
   small,
   disabled,
   marginRight,
+  className,
+
 }) {
   const [hoverRef, isHovered] = useHover();
 
-  let fillColor = customFillColor || primary45;
-  const whiteColor = customWhiteColor || "#FFF";
+  let fillColor = customFillColor || "bg-indigo-500";
+  const whiteColor = customWhiteColor || "text-white";
 
   let initialBg = null;
   let hoverBg = fillColor;
@@ -36,40 +38,17 @@ export function BigButton({
   }
 
   if (disabled) {
-    initialBg = "#ddd";
-    hoverBg = "#ddd";
-    fillColor = "#ddd";
+    initialBg = "bg-indigo-600";
+    hoverBg = "bg-indigo-400";
+    fillColor = "bg-indigo-300";
   }
 
-  const styles = {
-    container: {
-      display: "inline-flex",
-      alignItems: "center",
-      justifyContent: "center",
-      width: fullWidth ? "100%" : null,
-      backgroundColor: isHovered && !noHover ? hoverBg : initialBg,
-      color:
-        isHovered && !noHover && !disabled
-          ? hoverColor
-          : disabled
-          ? "#999"
-          : initialColor,
-      borderRadius: 4,
-      padding: small ? "2px 4px" : "6px 8px",
-      fontSize: small ? 14 : null,
-      border: `1px solid ${fillColor}`,
-      cursor: !disabled ? "pointer" : null,
-      userSelect: "none",
-      boxSizing: "border-box",
-      marginRight,
-    },
-  };
-
   return (
-    <div
+    <button
       id={id}
       ref={hoverRef}
-      style={{ ...styles.container, ...style }}
+      className={`inline-flex items-center justify-center: ${className}}  `}
+      style={style}
       onClick={() => {
         if (!disabled) {
           onClick();
@@ -77,6 +56,6 @@ export function BigButton({
       }}
     >
       {title}
-    </div>
+    </button>
   );
 }
