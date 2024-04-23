@@ -62,11 +62,13 @@ export default function DraggableText({ onEnd, onSet, onCancel, initialText }) {
 
 
 
-export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signatory, index, pageDetails, documentRef, position, onRemove }) {
+export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signatory, index, pageDetails, documentRef, position, onRemove, selectedSignatureType }) {
   const [confirmed, setConfirmed] = useState(false);
   const [name, setName] = useState(initialText || signatory?.name || "Nome");
   const [email, setEmail] = useState(signatory?.email || "");
   const [dragged, setDragged] = useState(false);
+
+  console.log(selectedSignatureType)
 
   const inputRef = useRef(null);
 
@@ -132,10 +134,10 @@ export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signat
             className={`p-1 relative text-lg bg-transparent cursor-${confirmed ? "default" : "move"} focus:outline-none`}
             onDoubleClick={handleDoubleClick}
             onClick={handleClick}
-            contentEditable={confirmed}
+            
           >
             <div className="text-sm text-gray-500">
-              {signatory?.signatureType && `${signatory.signatureType}`}
+              {selectedSignatureType && `${selectedSignatureType}`}
             </div>
             <div className="text-sm text-gray-500">
               {email}
