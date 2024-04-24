@@ -67,6 +67,7 @@ export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signat
   const [name, setName] = useState(initialText || signatory?.name || "Nome");
   const [email, setEmail] = useState(signatory?.email || "");
   const [dragged, setDragged] = useState(false);
+  const [signatoryPosition, setSignatoryPosition] = useState(position);
 
   console.log(selectedSignatureType)
 
@@ -111,8 +112,9 @@ export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signat
   const handleDragStop = useCallback((_, data) => {
     setDragged(true);
     const newPosition = { x: data.x, y: data.y };
+    setSignatoryPosition(newPosition); 
     onSet(name, newPosition);
-  }, [name, onSet]);
+  }, [name, onSet, position]);
 
   useEffect(() => {
     if (!dragged) {
