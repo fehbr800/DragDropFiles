@@ -22,7 +22,6 @@ export default function Drop({ onLoaded }) {
 
   const onDrop = useCallback((acceptedFiles) => {
     onLoaded(acceptedFiles);
-    // Do something with the files
   }, []);
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -32,7 +31,7 @@ export default function Drop({ onLoaded }) {
   return (
 <div
   {...getRootProps()}
-  className={`border-2 rounded-lg p-4 ${
+  className={`border-2 rounded-lg p-4 cursor-pointer ${
     isDragActive ? 'border-purple-600 bg-purple-100' : 'border-gray-300 bg-white'
   }`}
 >

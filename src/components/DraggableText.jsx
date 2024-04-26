@@ -1,7 +1,7 @@
 import Draggable from "react-draggable";
 import { CheckIcon, EllipsisVerticalIcon, TrashIcon } from'@heroicons/react/24/outline'
 import { cleanBorder, errorColor, goodColor, primary45 } from "../utils/colors";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 export default function DraggableText({ onEnd, onSet, onCancel, initialText }) {
   const [text, setText] = useState(initialText || "Assinatura");
@@ -62,10 +62,15 @@ export default function DraggableText({ onEnd, onSet, onCancel, initialText }) {
 
 
 
-export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signatory, index, fixedPosition, storedPosition }) {
+export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signatory, index, pageDetails, documentRef, position, onRemove, selectedSignatureType }) {
   const [confirmed, setConfirmed] = useState(false);
   const [name, setName] = useState(initialText || signatory?.name || "Nome");
   const [email, setEmail] = useState(signatory?.email || "");
+  const [dragged, setDragged] = useState(false);
+  const [signatoryPosition, setSignatoryPosition] = useState(position);
+
+  console.log(selectedSignatureType)
+
   const inputRef = useRef(null);
 
   const selectText = (element) => {
@@ -96,7 +101,7 @@ export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signat
   const handleSet = async () => {
     if (!confirmed) {
       if (typeof name === 'string' && name.trim().length > 0) {
-        onSet(name);
+        onSet(name, position);
         setConfirmed(true);
       } else {
         console.error('O nome não é uma string válida ou está vazio:', name);
@@ -104,14 +109,26 @@ export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signat
     }
   };
 
+  const handleDragStop = useCallback((_, data) => {
+    setDragged(true);
+    const newPosition = { x: data.x, y: data.y };
+    setSignatoryPosition(newPosition); 
+    onSet(name, newPosition);
+  }, [name, onSet, position]);
+
+  useEffect(() => {
+    if (!dragged) {
+      return;
+    }
+
+    onEnd();
+  }, [dragged, onEnd]);
+
   return (
-    <Draggable handle=".ellipsis" onStop={onEnd}>
-      <div
-        className={`absolute z-50 flex items-center justify-between p-2 border-2 rounded-lg ${fixedPosition ? 'border-green-500' : 'border-primary-400'}`}
-      
-      >
+    <Draggable defaultPosition={{ x: 0, y: 0 }} onStop={handleDragStop}>
+      <div className="absolute z-50 flex items-center justify-between p-2 border-2 rounded-lg border-primary-400">
         <div className="cursor-pointer ellipsis">
-          <EllipsisVerticalIcon className="w-6 h-8" />
+          <EllipsisVerticalIcon className="w-6 h-8"/>
         </div>
         <div onClick={handleSet} className="flex items-start justify-between gap-4">
           <div
@@ -119,10 +136,10 @@ export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signat
             className={`p-1 relative text-lg bg-transparent cursor-${confirmed ? "default" : "move"} focus:outline-none`}
             onDoubleClick={handleDoubleClick}
             onClick={handleClick}
-            contentEditable={confirmed}
+            
           >
             <div className="text-sm text-gray-500">
-              {signatory?.signatureType && `${signatory.signatureType}`}
+              {selectedSignatureType && `${selectedSignatureType}`}
             </div>
             <div className="text-sm text-gray-500">
               {email}
