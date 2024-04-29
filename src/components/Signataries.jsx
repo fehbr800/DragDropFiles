@@ -82,6 +82,10 @@ export function SignatoryContainer({ signatories, onClick, textInputVisible, doc
   const [currentPage, setCurrentPage] = useState(pageNum);
   const [selectedSignatureType, setSelectedSignatureType] = useState(null);
 
+  const getCurrentPagePositions = () => {
+    return signatoryPositions[currentPage] || {};
+  };
+
   const handleSignatoryClick = (signatory) => {
     const isSelected = selectedSignatories.some((selected) => selected.name === signatory.name);
     if (isSelected) {
@@ -90,6 +94,15 @@ export function SignatoryContainer({ signatories, onClick, textInputVisible, doc
       setSelectedSignatories([...selectedSignatories, signatory]);
     }
     if (onClick) onClick();
+  };
+
+  const saveSignatoryPositions = (positions) => {
+    setSignatoryPositions((prevPositions) => ({
+      ...prevPositions,
+      [currentPage]: positions,
+    }));
+
+    localStorage.setItem('signatoryPositions', JSON.stringify(signatoryPositions));
   };
 
   const handleDeleteSignatory = (name) => {
@@ -124,16 +137,14 @@ export function SignatoryContainer({ signatories, onClick, textInputVisible, doc
     setSelectedSignatureType('Rubrica');
   };
 
-  const handleSetPosition = async (name, newPosition) => {
-    setSignatoryPositions((prevPositions) => ({
-      ...prevPositions,
-      [currentPage]: {
-        ...(prevPositions[currentPage] || {}),
-        [name]: [...(prevPositions[currentPage]?.[name] || []), newPosition],
-      },
-    }));
+  const handleSetPosition = (name, newPosition) => {
+    const currentPagePositions = getCurrentPagePositions();
+    const updatedPositions = {
+      ...currentPagePositions,
+      [name]: newPosition,
+    };
+    saveSignatoryPositions(updatedPositions);
   };
-  
 
   const removeSignatoryPosition = (name, index) => {
     setSignatoryPositions((prevPositions) => {
@@ -146,6 +157,11 @@ export function SignatoryContainer({ signatories, onClick, textInputVisible, doc
   };
 
   useEffect(() => {
+    const savedPositions = JSON.parse(localStorage.getItem('signatoryPositions')) || {};
+    setSignatoryPositions(savedPositions);
+  }, []);
+
+  useEffect(() => {
     setCurrentPage(pageNum);
   }, [pageNum]);
 
@@ -155,9 +171,11 @@ export function SignatoryContainer({ signatories, onClick, textInputVisible, doc
 
   const remainingSlots = 5 - signatories.length;
   const isLimitReached = remainingSlots <= 0;
+  const currentPagePositions = getCurrentPagePositions();
 
   return (
     <div className="grid grid-cols-1 gap-4">
+      
       {isLimitReached && (
         <div className="p-4 text-red-800 bg-red-200 rounded-lg">
           Limite de 5 signatários atingido. Não é possível adicionar mais. {signatories.length} / 5
@@ -181,24 +199,25 @@ export function SignatoryContainer({ signatories, onClick, textInputVisible, doc
         </div>
       ))}
       {selectedSignatories.map((selectedSignatory, index) => (
-        <DraggableSignatory
-         key={selectedSignatory.id} 
-          index={index}
-          initialText={textInputVisible && selectedSignatory === 'date' ? dayjs().format('MM/d/YYYY') : null}
-          pageDetails={pageDetails}
-          documentRef={documentRef}
-          positions={signatoryPositions[currentPage]?.[selectedSignatory.name] || []}
-          signatory={selectedSignatory}
-          onCancel={() => setSelectedSignatories(selectedSignatories.filter((selected) => selected.name !== selectedSignatory.name))}
-          onEnd={(e, data) => {
-            if (currentPage === pageNum) {
-              setPosition(selectedSignatory, e, data);
-            }
-          }}
-          onSet={(name, position) => handleSetPosition(name, position)}
-          onRemove={removeSignatoryPosition}
-          selectedSignatureType={selectedSignatureType} 
-        />
+     <DraggableSignatory
+     key={selectedSignatory.id}
+     index={index}
+     initialText={textInputVisible && selectedSignatory === 'date' ? dayjs().format('MM/d/YYYY') : null}
+     pageDetails={pageDetails}
+     documentRef={documentRef}
+     setPosition={setPosition}
+     position={getCurrentPagePositions()[selectedSignatory.name] || { x: 0, y: 0 }} 
+     signatory={selectedSignatory}
+     onCancel={() => setSelectedSignatories(selectedSignatories.filter((selected) => selected.name !== selectedSignatory.name))}
+     onEnd={(e, data) => {
+       if (currentPage === pageNum) {
+         setPosition(selectedSignatory, e, data);
+       }
+     }}
+     onSet={handleSetPosition}
+     onRemove={removeSignatoryPosition}
+     selectedSignatureType={selectedSignatureType} 
+   />
       ))}
     </div>
   );

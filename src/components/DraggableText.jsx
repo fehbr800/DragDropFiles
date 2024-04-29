@@ -62,13 +62,15 @@ export default function DraggableText({ onEnd, onSet, onCancel, initialText }) {
 
 
 
-export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signatory, index, pageDetails, documentRef, position, onRemove, selectedSignatureType }) {
+export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signatory, index, pageDetails, documentRef, position, setPosition, onRemove, selectedSignatureType, currentPage }) {
   const [confirmed, setConfirmed] = useState(false);
   const [name, setName] = useState(initialText || signatory?.name || "Nome");
   const [email, setEmail] = useState(signatory?.email || "");
   const [dragged, setDragged] = useState(false);
 
-  console.log(selectedSignatureType)
+
+
+  console.log(currentPage)
 
   const inputRef = useRef(null);
 
@@ -122,10 +124,30 @@ export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signat
     onEnd();
   }, [dragged, onEnd]);
 
+ 
+  useEffect(() => {
+    const handleResize = () => {
+      const rect = documentRef.current.getBoundingClientRect();
+      const scaleX = rect.width / pageDetails.width;
+      const scaleY = rect.height / pageDetails.height;
+      const newX = (position.x - rect.x) / scaleX;
+      const newY = (position.y - rect.y) / scaleY;
+      setPosition(name, { x: newX, y: newY });
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [documentRef, pageDetails, position, setPosition, name]);
+  
+
   return (
-    <Draggable defaultPosition={{ x: 0, y: 0 }} onStop={handleDragStop}>
+    <Draggable  defaultPosition={{ x: 0, y: 0 }} onStop={handleDragStop}>
       <div className="absolute z-50 flex items-center justify-between p-2 border-2 rounded-lg border-primary-400">
         <div className="cursor-pointer ellipsis">
+        <div className="absolute top-0 left-0 text-xs text-gray-500">{`Página: ${pageDetails.pageNumber}, X: ${position.x.toFixed(2)}, Y: ${position.y.toFixed(2)}`}</div>
           <EllipsisVerticalIcon className="w-6 h-8"/>
         </div>
         <div onClick={handleSet} className="flex items-start justify-between gap-4">

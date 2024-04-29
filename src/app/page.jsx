@@ -65,6 +65,9 @@ const [editingIndex, setEditingIndex] = useState(-1);
 const [iframeSrc, setIframeSrc] = useState(null);
 
 
+
+
+
 const addSignatory = (signatory) => {
   if (signatories.length < 5) {
     setSignatories([...signatories, signatory]);
@@ -201,14 +204,7 @@ return (
         {pdf ? (
         <div className="flex justify-center gap-5 py-4">
           <div className="flex flex-col gap-4 mt-10">
-            {/* {!signatureURL ? (
-            <BigButton marginRight={8} title={"Adicionar assinatura Digital"} onClick={()=>
-              setSignatureDialogVisible(true)}
-              />
-              ) : null} */}
-
-              {/* <BigButton marginRight={8} title={"Add Date"} onClick={()=> setTextInputVisible("date")}
-                /> */}
+       
                 <SignatoryForm addSignatory={addSignatory} signatories={signatories} pdf={pdf} pageNum={pageNum} pageDetails={pageDetails}
                   setPosition={setPosition} setPdf={setPdf} />
 
@@ -226,16 +222,7 @@ return (
                 pageNum={pageNum}
                 
               />
-                {/* <BigButton marginRight={8} title={"Adicionar Assinatura"} onClick={()=> setTextInputVisible(true)}
-                  /> */}
-
-                 
-                    {/* {pdf ? (
-                    <BigButton marginRight={8} inverted={true} title={"Download"} onClick={()=> {
-                      downloadURI(pdf, "file.pdf");
-                      }}
-                      />
-                      ) : null} */}
+          
 
                       {pdf?(
                       
@@ -244,7 +231,7 @@ return (
                         </button>
                       ):null}
           </div>
-          <div ref={documentRef} className="relative rounded-md shadow-md max-w-[800px] ">
+          <div ref={documentRef} className="relative">
             <div className="absolute top-[0.64rem] z-50 right-0 flex justify-end mx-2">
            <button className="p-1 text-red-400 rounded-lg shadow-lg hover:text-red-600 hover:bg-gray-50" onClick={()=> {
                     setTextInputVisible(false);
@@ -320,120 +307,9 @@ return (
           ) : null} */}
 
 
-            {textInputVisible ? (
-            <DraggableText initialText={ textInputVisible && selectedText ==="date" ? dayjs().format("MM/d/YYYY") : null } onCancel={()=>
-              setTextInputVisible(false)}
-              onEnd={setPosition}
-              onSet={async (text) => {
-              const { originalHeight, originalWidth } = pageDetails;
-              const scale = originalWidth / documentRef.current.clientWidth;
-
-              const y =
-              documentRef.current.clientHeight -
-              (position.y +
-              (12 * scale) -
-              position.offsetY -
-              documentRef.current.offsetTop);
-              const x =
-              position.x -
-              166 -
-              position.offsetX -
-              documentRef.current.offsetLeft;
-              
-              const newY =
-              (y * originalHeight) / documentRef.current.clientHeight;
-              const newX =
-              (x * originalWidth) / documentRef.current.clientWidth;
-
-              const pdfDoc = await PDFDocument.load(pdf);
-
-              const pages = pdfDoc.getPages();
-              const firstPage = pages[pageNum];
-
-              firstPage.drawText(text, {
-              x: newX,
-              y: newY,
-              size: 20 * scale,
-              });
-
-              const pdfBytes = await pdfDoc.save();
-              const blob = new Blob([new Uint8Array(pdfBytes)]);
-
-              const URL = await blobToURL(blob);
-              setPdf(URL);
-              setPosition(null);
-              setTextInputVisible(false);
-              }}
-              />
-              ) : null}
-
-              {signatureURL ? (
-              <DraggableSignature url={signatureURL} onCancel={()=> {
-                setSignatureURL(null);
-                }}
-                onSet={async () => {
-                const { originalHeight, originalWidth } = pageDetails;
-                const scale = originalWidth / documentRef.current.clientWidth;
-
-                const y =
-                documentRef.current.clientHeight -
-                (position.y -
-                position.offsetY +
-
-                documentRef.current.offsetTop);
-                const x =
-                position.x -
-
-                position.offsetX -
-                documentRef.current.offsetLeft;
-                const newY =
-                (y * originalHeight) / documentRef.current.clientHeight;
-                const newX =
-                (x * originalWidth) / documentRef.current.clientWidth;
-
-                const pdfDoc = await PDFDocument.load(pdf);
-
-                const pages = pdfDoc.getPages();
-                const firstPage = pages[pageNum];
-
-                const pngImage = await pdfDoc.embedPng(signatureURL);
-                const pngDims = pngImage.scale( scale * .3);
-
-                firstPage.drawImage(pngImage, {
-                x: newX,
-                y: newY,
-                width: pngDims.width,
-                height: pngDims.height,
-                });
-
-                if (autoDate) {
-                firstPage.drawText(
-                `Signed ${dayjs().format(
-                "M/d/YYYY HH:mm:ss ZZ"
-                )}`,
-                {
-                x: newX,
-                y: newY - 10,
-                size: 14 * scale,
-                color: rgb(0.074, 0.545, 0.262),
-                }
-                );
-                }
-
-                const pdfBytes = await pdfDoc.save();
-                const blob = new Blob([new Uint8Array(pdfBytes)]);
-
-                const URL = await blobToURL(blob);
-                setPdf(URL);
-                setPosition(null);
-                setSignatureURL(null);
-                }}
-                onEnd={setPosition}
-                />
-                ) : null}
-
-
-                <Document file={pdf} onLoadSuccess={(data)=> {
+       
+              <div  className="p-4 rounded-md shadow-lg">
+              <Document file={pdf} onLoadSuccess={(data)=> {
                   setTotalPages(data.numPages);
                   }}
                   >
@@ -443,6 +319,8 @@ return (
                     />
                 </Document>
                 <PagingControl pageNum={pageNum} setPageNum={setPageNum} totalPages={totalPages} />
+              </div>
+         
           </div>
 
         </div>
