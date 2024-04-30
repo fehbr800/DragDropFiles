@@ -28,26 +28,6 @@ document.body.removeChild(link);
 }
 
 function Home() {
-const styles = {
-container: {
-maxWidth: 900,
-margin: "0 auto",
-},
-sigBlock: {
-display: "inline-block",
-border: "3px solid #000",
-},
-documentBlock: {
-maxWidth: 800,
-margin: "20px ",
-border: "1px solid #999",
-},
-controls: {
-maxWidth: 800,
-margin: "0 auto",
-marginTop: 8,
-},
-};
 const [pdf, setPdf] = useState(null);
 const [autoDate, setAutoDate] = useState(true);
 const [signatureURL, setSignatureURL] = useState(null);
@@ -63,7 +43,6 @@ const documentRef = useRef(null);
 const [selectedText, setSelectedText] = useState('')
 const [editingIndex, setEditingIndex] = useState(-1);
 const [iframeSrc, setIframeSrc] = useState(null);
-
 
 
 
@@ -245,68 +224,7 @@ return (
                       <XMarkIcon className="w-6 h-6"/>
                     </button>
             </div>
-         
-          {/* {selectedSignatory ? (
-            signatories.map((signatory, index) => (
-              <DraggableSignatory
-              index={index}
-                key={index}
-                initialText={
-                  textInputVisible && selectedSignatory === 'date'
-                    ? dayjs().format('MM/d/YYYY')
-                    : null
-                }
-                signatory={signatory}
-                onCancel={handleCancel}
-                onEnd={setPosition}
-                onSet={async (name) => {
-                  if (selectedSignatory ) {
-                    const { originalHeight, originalWidth } = pageDetails;
-                    const scale = originalWidth / documentRef.current.clientWidth;
-
-                    const y =
-                      documentRef.current.clientHeight -
-                      (position.y +
-                        (12 * scale) -
-                        position.offsetY -
-                        documentRef.current.offsetTop);
-                    const x =
-                      position.x -
-                      166 -
-                      position.offsetX -
-                      documentRef.current.offsetLeft;
-
-                    const newY =
-                      (y * originalHeight) / documentRef.current.clientHeight;
-                    const newX =
-                      (x * originalWidth) / documentRef.current.clientWidth;
-
-                    const pdfDoc = await PDFDocument.load(pdf);
-
-                    const pages = pdfDoc.getPages();
-                    const firstPage = pages[pageNum];
-
-                    firstPage.drawText(name, {
-                      x: newX,
-                      y: newY,
-                      size: 20 * scale,
-                      });
-
-                    const pdfBytes = await pdfDoc.save();
-                    const blob = new Blob([new Uint8Array(pdfBytes)]);
-
-                    const URL = await blobToURL(blob);
-                    setPdf(URL);
-                    setPosition(null);
-                    setTextInputVisible(false);
-                    setSelectedSignatory(null);
-                  }
-                }}
-              />
-            ))
-          ) : null} */}
-
-
+      
        
               <div  className="p-4 rounded-md shadow-lg">
               <Document file={pdf} onLoadSuccess={(data)=> {

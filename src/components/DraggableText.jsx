@@ -62,7 +62,7 @@ export default function DraggableText({ onEnd, onSet, onCancel, initialText }) {
 
 
 
-export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signatory, index, pageDetails, documentRef, position, setPosition, onRemove, selectedSignatureType, currentPage }) {
+export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signatory, index,pdf,pageDetails, documentRef, position, setPosition, onRemove, selectedSignatureType, currentPage }) {
   const [confirmed, setConfirmed] = useState(false);
   const [name, setName] = useState(initialText || signatory?.name || "Nome");
   const [email, setEmail] = useState(signatory?.email || "");
@@ -124,6 +124,13 @@ export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signat
     onEnd();
   }, [dragged, onEnd]);
 
+  const handleDragStart = () => {
+    setDragged(true);
+  };
+
+  
+
+  const draggableStyles = dragged ? "border-green-500 shadow-lg" : "border-primary-400";
  
   useEffect(() => {
     const handleResize = () => {
@@ -144,8 +151,8 @@ export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signat
   
 
   return (
-    <Draggable  defaultPosition={{ x: 0, y: 0 }} onStop={handleDragStop}>
-      <div className="absolute z-50 flex items-center justify-between p-2 border-2 rounded-lg border-primary-400">
+    <Draggable  defaultPosition={{ x: 0, y: 0 }}  onStart={handleDragStart} onStop={handleDragStop}>
+     <div className={`absolute z-50 flex items-center justify-between p-2 border-2 rounded-lg ${draggableStyles}`}>
         <div className="cursor-pointer ellipsis">
         <div className="absolute top-0 left-0 text-xs text-gray-500">{`Página: ${pageDetails.pageNumber}, X: ${position.x.toFixed(2)}, Y: ${position.y.toFixed(2)}`}</div>
           <EllipsisVerticalIcon className="w-6 h-8"/>
