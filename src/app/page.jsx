@@ -15,6 +15,7 @@ import PagingControl from "@/components/PagingControl";
 import { blobToURL } from "@/utils/utils";
 import SignatoryForm, { SignatoryContainer, SignatoryHistory } from "@/components/Signataries";
 import { XCircleIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { document } from "postcss";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
@@ -104,8 +105,7 @@ const handleSaveAndContinue = async () => {
     email: signatory.email,
     signatureType: signatory.signatureType,
     signature: signatory.signature,
-    signaturePosition: signatory.position,
-  
+    signaturePosition: pageNum === pageNum ? signatory.position : null, 
   }));
 
   try {
@@ -134,6 +134,7 @@ const handleSaveAndContinue = async () => {
     const pdfBytes = await pdfDoc.save();
 
     
+    
     const modifiedPdfUrl =arrayBufferToBase64(pdfBytes);
 
     setIframeSrc(modifiedPdfUrl);
@@ -158,8 +159,7 @@ const arrayBufferToBase64 = (buffer) => {
 
 
 return (
-<div className="container flex items-center justify-center min-h-screen mx-auto">
-
+<div className="">
   <div className="">
 
 
@@ -173,6 +173,7 @@ return (
       />
       ) : null}
 
+      <div className="flex items-center justify-center my-auto">
       {!pdf ? (
       <Drop onLoaded={async (files)=> {
         const URL = await blobToURL(files[0]);
@@ -180,11 +181,14 @@ return (
         }}
         />
         ) : null}
+      </div>
+    
+
         {pdf ? (
-        <div className="flex justify-center gap-5 py-4">
+        <div className="flex py-4 grow ">
           <div className="flex flex-col gap-4 mt-10">
-       
-                <SignatoryForm addSignatory={addSignatory} signatories={signatories} pdf={pdf} pageNum={pageNum} pageDetails={pageDetails}
+       <div className="flex flex-col items-end flex-1 gap-4 p-4">
+       <SignatoryForm addSignatory={addSignatory} signatories={signatories} pdf={pdf} pageNum={pageNum} pageDetails={pageDetails}
                   setPosition={setPosition} setPdf={setPdf} />
 
                 <SignatoryContainer
@@ -201,18 +205,20 @@ return (
                 pageNum={pageNum}
                 
               />
-          
-
-                      {pdf?(
+             {pdf?(
                       
-                        <button onClick={handleSaveAndContinue} className="px-8 py-2 font-semibold text-white bg-indigo-600 rounded-md">
-                          Salvar e continuar
-                        </button>
-                      ):null}
+                      <button onClick={handleSaveAndContinue} className="px-8 py-2 font-semibold text-white bg-indigo-600 rounded-md">
+                        Salvar e continuar
+                      </button>
+                    ):null}
+       </div>
+             
+
+                   
           </div>
-          <div ref={documentRef} className="relative">
+          <div className="relative flex-1 mx-auto bg-gray-200 max-w-7xl">
             <div className="absolute top-[0.64rem] z-50 right-0 flex justify-end mx-2">
-           <button className="p-1 text-red-400 rounded-lg shadow-lg hover:text-red-600 hover:bg-gray-50" onClick={()=> {
+           <button className="p-1 text-red-400 bg-white rounded-lg shadow-lg hover:text-red-600 hover:bg-gray-50" onClick={()=> {
                     setTextInputVisible(false);
                     setSignatureDialogVisible(false);
                     setSignatureURL(null);
@@ -226,17 +232,20 @@ return (
             </div>
       
        
-              <div  className="p-4 rounded-md shadow-lg">
+              <div ref={documentRef} className="p-4 rounded-md relative max-w-[800px] mx-auto ">
               <Document file={pdf} onLoadSuccess={(data)=> {
                   setTotalPages(data.numPages);
                   }}
                   >
-                  <Page pageNumber={pageNum + 1}  renderTextLayer={false}  onLoadSuccess={(data)=> {
+                  <Page pageNumber={pageNum + 1} height={1200} width={800}  renderTextLayer={false}  onLoadSuccess={(data)=> {
                     setPageDetails(data);
                     }}
                     />
                 </Document>
-                <PagingControl pageNum={pageNum} setPageNum={setPageNum} totalPages={totalPages} />
+                    
+                    <PagingControl pageNum={pageNum} setPageNum={setPageNum} totalPages={totalPages} />
+            
+               
               </div>
          
           </div>

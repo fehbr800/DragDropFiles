@@ -65,7 +65,7 @@ export default function SignatoryForm({ addSignatory, signatories }) {
           className={`px-4 py-2 my-2 text-white transition duration-150 ease-out bg-indigo-500 rounded-lg ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-indigo-600'}`} 
           type="submit"
           disabled={isDisabled}
-        >Adicionar Signatário</button>
+        >Adicionar Assinante</button>
       </form>
     </div>
   );
@@ -81,55 +81,66 @@ export function SignatoryContainer({ signatories, onClick, textInputVisible, doc
   const [signatoryPositions, setSignatoryPositions] = useState({});
   const [currentPage, setCurrentPage] = useState(pageNum);
   const [selectedSignatureType, setSelectedSignatureType] = useState(null);
+  const [signatureTypes, setSignatureTypes] = useState({});
   
-  console.log(currentPage)
+  
+  console.log(signatoryPositions)
 
-  const getCurrentPagePositions = () => {
-    return signatoryPositions[currentPage] || {};
-  };
-
+  const getCurrentPagePositions = () => signatoryPositions[pageNum] || {};
+  
   const handleSignatoryClick = (signatory) => {
-    const isSelected = selectedSignatories.some((selected) => selected.name === signatory.name);
-    if (isSelected) {
-      setSelectedSignatories(selectedSignatories.filter((selected) => selected.name !== signatory.name));
-    } else {
-      setSelectedSignatories([...selectedSignatories, signatory]);
-    }
-    if (onClick) onClick();
+    const isSelected = selectedSignatories.some(selected => selected.id === signatory.id);
+    setSelectedSignatories(isSelected ? selectedSignatories.filter(selected => selected.id !== signatory.id) : [...selectedSignatories, signatory]);
+    onClick && onClick();
   };
 
-  const saveSignatoryPositions = (positions) => {
-    setSignatoryPositions((prevPositions) => {
-      const updatedPositions = {
-        ...prevPositions,
-        [currentPage]: positions,
-      };
-      localStorage.setItem('signatoryPositions', JSON.stringify(updatedPositions));
+  const handleSetSignatureType = (signatoryId, type) => {
+    setSignatureTypes(prevTypes => ({
+      ...prevTypes,
+      [signatoryId]: type
+    }));
+  };
+
+
+  const setSignatoryPosition = (signatoryId, newPosition, page) => {
+    setSignatoryPositions(prevPositions => ({
+      ...prevPositions,
+      [page]: {
+        ...prevPositions[page],
+        [signatoryId]: newPosition
+      }
+    }));
+  };
+  
+  
+
+  const handleDeleteSignatory = (signatoryId) => {
+
+    setSelectedSignatories(prevSignatories => 
+      prevSignatories.filter(signatory => signatory.id !== signatoryId)
+    );
+  
+    setSignatoryPositions(prevPositions => {
+      const updatedPositions = { ...prevPositions };
+      Object.keys(updatedPositions).forEach(page => {
+        delete updatedPositions[page][signatoryId];  
+      });
       return updatedPositions;
     });
   };
-  
-
-  const handleDeleteSignatory = (name) => {
-    setSelectedSignatories((prevSignatories) =>
-      prevSignatories.filter((selected) => selected.name !== name)
-    );
-  };
-
-  const handleSetSignatureType = (type) => {
-    setSelectedSignatureType(type);
-  };
 
   
 
-  const handleSetPosition = (name, newPosition) => {
-    const currentPagePositions = getCurrentPagePositions();
-    const updatedPositions = {
-      ...currentPagePositions,
-      [name]: newPosition,
-    };
-    saveSignatoryPositions(updatedPositions);
+  const handleSetPosition = (signatoryId, newPosition) => {
+    setSignatoryPositions(prevPositions => ({
+      ...prevPositions,
+      [currentPage]: {
+        ...prevPositions[currentPage],
+        [signatoryId]: newPosition
+      }
+    }));
   };
+
 
   const removeSignatoryPosition = (name, index) => {
     setSignatoryPositions((prevPositions) => {
@@ -154,6 +165,16 @@ export function SignatoryContainer({ signatories, onClick, textInputVisible, doc
     setSelectedSignatories([]);
   }, [pageNum]);
 
+  useEffect(() => {
+    const currentPagePositions = signatoryPositions[pageNum] || {};
+    selectedSignatories.forEach(signatory => {
+      const position = currentPagePositions[signatory.id];
+      if (position) {
+        setPosition(signatory, position); 
+      }
+    });
+  }, [pageNum]);
+
 
 
   const remainingSlots = 5 - signatories.length;
@@ -173,43 +194,53 @@ export function SignatoryContainer({ signatories, onClick, textInputVisible, doc
         <div key={index} className="relative p-4 bg-white rounded-lg shadow-md cursor-pointer" onClick={() => handleSignatoryClick(signatory)}>
           <div className="flex items-center justify-center">
             <div className="text-lg font-semibold text-center">Assinante {index + 1}</div>
-            <button className="absolute top-0 mt-1 mr-1 text-red-400 right-1 hover:text-red-600 focus:outline-none" onClick={() => handleDeleteSignatory(signatory.id)}>
+            <button className="absolute top-0 mt-1 mr-1 text-red-400 right-1 hover:text-red-600 focus:outline-none"  onClick={(e) => {
+                e.stopPropagation();  
+                handleDeleteSignatory(signatory.id);
+              }}>
               X
             </button>
           </div>
           <div className="text-lg font-normal">{signatory.name}</div>
           <div className="text-lg font-normal">{signatory.email}</div>
           <div className="flex w-full gap-4">
-          <button className={`py-2 px-1 font-medium text-gray-600 w-40 rounded-lg shadow-md hover:bg-gray-100 ${selectedSignatureType === 'Assinatura Digital' ? 'bg-gray-200' : ''}`} onClick={() => handleSetSignatureType('Assinatura Digital')}>
+            <button className={`py-2 px-1 font-medium text-gray-600 w-40 rounded-lg shadow-md ${signatureTypes[signatory.id] === 'Assinatura Digital' ? 'bg-gray-200' : ''}`} onClick={(e) => {
+              e.stopPropagation();
+              handleSetSignatureType(signatory.id, 'Assinatura Digital');
+            }}>
               Assinatura Digital
             </button>
-            <button className={`py-2 px-1 font-medium text-gray-600 w-40 rounded-lg shadow-md hover:bg-gray-100 ${selectedSignatureType === 'Rubrica' ? 'bg-gray-200' : ''}`} onClick={() => handleSetSignatureType('Rubrica')}>
+            <button className={`py-2 px-1 font-medium text-gray-600 w-40 rounded-lg shadow-md ${signatureTypes[signatory.id] === 'Rubrica' ? 'bg-gray-200' : ''}`} onClick={(e) => {
+              e.stopPropagation();
+              handleSetSignatureType(signatory.id, 'Rubrica');
+            }}>
               Rubrica
             </button>
           </div>
         </div>
       ))}
       {selectedSignatories.map((selectedSignatory, index) => (
-     <DraggableSignatory
-     key={selectedSignatory.id}
-     index={index}
-     initialText={textInputVisible && selectedSignatory === 'date' ? dayjs().format('MM/d/YYYY') : null}
-     pageDetails={pageDetails}
-     documentRef={documentRef}
-     setPosition={setPosition}
-     currentPage={currentPage}
-     position={getCurrentPagePositions()[selectedSignatory.name] || { x: 0, y: 0 }} 
-     signatory={selectedSignatory}
-     onCancel={() => setSelectedSignatories(selectedSignatories.filter((selected) => selected.name !== selectedSignatory.name))}
-     onEnd={(e, data) => {
-       if (currentPage === pageNum) {
-         setPosition(selectedSignatory, e, data);
-       }
-     }}
-     onSet={handleSetPosition}
-     onRemove={removeSignatoryPosition}
-     selectedSignatureType={selectedSignatureType} 
-   />
+    <DraggableSignatory
+    key={selectedSignatory.id}
+    index={index}
+    initialText={textInputVisible && selectedSignatory === 'date' ? dayjs().format('MM/d/YYYY') : null}
+    pageDetails={pageDetails}
+    documentRef={documentRef}
+    setPosition={setPosition}
+    currentPage={currentPage}
+    position={getCurrentPagePositions()[selectedSignatory.id] || { x: 0, y: 0 }}
+    signatory={selectedSignatory}
+    onCancel={() => setSelectedSignatories(selectedSignatories.filter((selected) => selected.id !== selectedSignatory.id))}
+    onEnd={(e, data) => {
+      if (currentPage === pageNum && data) {
+        setPosition(selectedSignatory, { x: data.x, y: data.y });
+      }
+    }}
+    onSet={handleSetPosition}
+    onRemove={removeSignatoryPosition}
+    selectedSignatureType={signatureTypes[selectedSignatory.id]} 
+  />
+  
       ))}
     </div>
   );

@@ -110,11 +110,16 @@ export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signat
     }
   };
 
-  const handleDragStop = useCallback((_, data) => {
-    setDragged(true);
-    const newPosition = { x: data.x, y: data.y };
-    onSet(name, newPosition);
+  const handleDragStop = useCallback((event, data) => {
+    setDragged(false);
+    if (data && typeof data.x === 'number' && typeof data.y === 'number') {
+      const newPosition = { x: data.x, y: data.y };
+      onSet(name, newPosition);
+    } else {
+      console.error('Dados de arrasto inválidos:', data);
+    }
   }, [name, onSet]);
+  
 
   useEffect(() => {
     if (!dragged) {
@@ -130,7 +135,7 @@ export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signat
 
   
 
-  const draggableStyles = dragged ? "border-green-500 shadow-lg" : "border-primary-400";
+  const draggableStyles = dragged ? "border-green-500 shadow-lg " : "border-gray-400";
  
   useEffect(() => {
     const handleResize = () => {
@@ -152,9 +157,9 @@ export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signat
 
   return (
     <Draggable  defaultPosition={{ x: 0, y: 0 }}  onStart={handleDragStart} onStop={handleDragStop}>
-     <div className={`absolute z-50 flex items-center justify-between p-2 border-2 rounded-lg ${draggableStyles}`}>
+     <div className={`absolute z-50 flex items-center cursor-pointer justify-between p-2 border-2 border-dashed rounded-lg ${draggableStyles}`}>
         <div className="cursor-pointer ellipsis">
-        <div className="absolute top-0 left-0 text-xs text-gray-500">{`Página: ${pageDetails.pageNumber}, X: ${position.x.toFixed(2)}, Y: ${position.y.toFixed(2)}`}</div>
+        <div className="absolute top-0 text-xs text-gray-500 left-2">{`Página: ${pageDetails.pageNumber}, X: ${position.x.toFixed(2)}, Y: ${position.y.toFixed(2)}`}</div>
           <EllipsisVerticalIcon className="w-6 h-8"/>
         </div>
         <div onClick={handleSet} className="flex items-start justify-between gap-4">

@@ -30,7 +30,7 @@ export default function PagingControl({ totalPages, pageNum, setPageNum }) {
           onClick={() => setPageNum(pageNum - 1)}
           disabled={pageNum === 0} 
         />
-        <div className="p-2 font-semibold rounded-md shadow-md bg-gray-100/15">
+        <div className="p-2 font-semibold bg-white rounded-md shadow-md">
            {pageNum + 1}/{totalPages}
         </div>
         <BigButton

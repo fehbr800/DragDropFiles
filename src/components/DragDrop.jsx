@@ -1,24 +1,11 @@
 import { cleanBorder, primary45 } from "@/utils/colors";
+import { DocumentPlusIcon } from "@heroicons/react/24/outline";
 import React, { useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 
 
 export default function Drop({ onLoaded }) {
-  const styles = {
-    container: {
-      textAlign: "center",
-      border: cleanBorder,
-      padding: 20,
-      marginTop: 12,
-      color: primary45,
-      fontSize: 18,
-      fontWeight: 600,
-      borderRadius: 4,
-      userSelect: "none",
-      outline: 0,
-      cursor: "pointer",
-    },
-  };
+
 
   const onDrop = useCallback((acceptedFiles) => {
     onLoaded(acceptedFiles);
@@ -30,17 +17,19 @@ export default function Drop({ onLoaded }) {
 
   return (
 <div
-  {...getRootProps()}
-  className={`border-2 rounded-lg p-4 cursor-pointer ${
-    isDragActive ? 'border-purple-600 bg-purple-100' : 'border-gray-300 bg-white'
-  }`}
->
-  <input {...getInputProps()} />
-  {isDragActive ? (
-    <p className="text-purple-600">Solte o PDF aqui</p>
-  ) : (
-    <p className="text-gray-600">Adicione um arquivo PDF aqui</p>
-  )}
-</div>
+      {...getRootProps()}
+      className={`relative border-4 rounded-lg p-6 mt-5 cursor-pointer transition duration-300 ease-in-out ${
+        isDragActive ? 'border-purple-700 bg-purple-100 shadow-lg' : 'border-gray-300 bg-white hover:border-purple-600'
+      }`}
+      style={{ minHeight: '200px' }}
+    >
+      <DocumentPlusIcon className="w-20 h-20 mx-auto text-gray-500" />
+      <input {...getInputProps()} />
+      <p className={`text-center font-semibold ${
+        isDragActive ? 'text-purple-700' : 'text-gray-600'
+      }`}>
+        {isDragActive ? 'Solte o PDF aqui' : 'Arraste e solte um arquivo PDF aqui ou clique para selecionar'}
+      </p>
+    </div>
   );
 }
