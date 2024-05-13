@@ -5,6 +5,7 @@ import { blobToURL } from "@/utils/utils";
 import dayjs from "dayjs";
 import { v4 as uuidv4 } from 'uuid'; 
 import { TrashIcon } from "@heroicons/react/24/outline";
+import { Reorder } from 'framer-motion';
 
 
 export default function SignatoryForm({ addSignatory, signatories }) {
@@ -76,21 +77,32 @@ export default function SignatoryForm({ addSignatory, signatories }) {
 
 
 
-export function SignatoryContainer({ signatories, onClick, textInputVisible, documentRef, setTextInputVisible, pdf, pageNum, pageDetails, setPosition, setPdf, position, onDelete }) {
+export function SignatoryContainer({ signatories, setSignatories,  onClick, textInputVisible, documentRef, setTextInputVisible, pdf, pageNum, pageDetails, setPosition, setPdf, position, onDelete }) {
   const [selectedSignatories, setSelectedSignatories] = useState([]);
   const [signatoryPositions, setSignatoryPositions] = useState({});
   const [currentPage, setCurrentPage] = useState(pageNum);
   const [selectedSignatureType, setSelectedSignatureType] = useState(null);
   const [signatureTypes, setSignatureTypes] = useState({});
+  const [highlightDocument, setHighlightDocument] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState('');
   
   
   console.log(signatoryPositions)
 
   const getCurrentPagePositions = () => signatoryPositions[pageNum] || {};
+
+
+  const onReorderSignatories = (newOrder) => {
+    setSignatories(newOrder);
+  };
+
   
   const handleSignatoryClick = (signatory) => {
     const isSelected = selectedSignatories.some(selected => selected.id === signatory.id);
     setSelectedSignatories(isSelected ? selectedSignatories.filter(selected => selected.id !== signatory.id) : [...selectedSignatories, signatory]);
+    setHighlightDocument(true);
+    setFeedbackMessage('Arraste o signatário para o documento para posicionar');
+    setTimeout(() => setFeedbackMessage(''), 5000);  
     onClick && onClick();
   };
 
@@ -101,29 +113,25 @@ export function SignatoryContainer({ signatories, onClick, textInputVisible, doc
     }));
   };
 
+  useEffect(() => {
+    if (selectedSignatories.length === 0) {
+      setHighlightDocument(false);
+    }
+  }, [selectedSignatories.length]);
 
-  const setSignatoryPosition = (signatoryId, newPosition, page) => {
-    setSignatoryPositions(prevPositions => ({
-      ...prevPositions,
-      [page]: {
-        ...prevPositions[page],
-        [signatoryId]: newPosition
-      }
-    }));
-  };
-  
+
+
   
 
   const handleDeleteSignatory = (signatoryId) => {
-
-    setSelectedSignatories(prevSignatories => 
+    onDelete(signatoryId);
+    setSelectedSignatories(prevSignatories =>
       prevSignatories.filter(signatory => signatory.id !== signatoryId)
     );
-  
     setSignatoryPositions(prevPositions => {
       const updatedPositions = { ...prevPositions };
       Object.keys(updatedPositions).forEach(page => {
-        delete updatedPositions[page][signatoryId];  
+        delete updatedPositions[page][signatoryId];
       });
       return updatedPositions;
     });
@@ -139,6 +147,7 @@ export function SignatoryContainer({ signatories, onClick, textInputVisible, doc
         [signatoryId]: newPosition
       }
     }));
+    setHighlightDocument(false);
   };
 
 
@@ -182,43 +191,53 @@ export function SignatoryContainer({ signatories, onClick, textInputVisible, doc
   const currentPagePositions = getCurrentPagePositions();
 
   return (
-    <div className="grid grid-cols-1 gap-4">
-      
+    <div className="grid grid-cols-1 gap-4"> 
       {isLimitReached && (
         <div className="p-4 text-red-800 bg-red-200 rounded-lg">
           Limite de 5 signatários atingido. Não é possível adicionar mais. {signatories.length} / 5
         </div>
       )}
+
+      {highlightDocument && feedbackMessage && (
+        <p className="text-center text-blue-400">
+          {feedbackMessage}
+        </p>
+      )}
+        
       <div className="flex justify-end">Assinantes disponíveis {signatories.length}/5</div>
-      {signatories.map((signatory, index) => (
-        <div key={index} className="relative p-4 bg-white rounded-lg shadow-md cursor-pointer" onClick={() => handleSignatoryClick(signatory)}>
-          <div className="flex items-center justify-center">
-            <div className="text-lg font-semibold text-center">Assinante {index + 1}</div>
-            <button className="absolute top-0 mt-1 mr-1 text-red-400 right-1 hover:text-red-600 focus:outline-none"  onClick={(e) => {
-                e.stopPropagation();  
-                handleDeleteSignatory(signatory.id);
-              }}>
-              X
-            </button>
-          </div>
-          <div className="text-lg font-normal">{signatory.name}</div>
-          <div className="text-lg font-normal">{signatory.email}</div>
-          <div className="flex w-full gap-4">
-            <button className={`py-2 px-1 font-medium text-gray-600 w-40 rounded-lg shadow-md ${signatureTypes[signatory.id] === 'Assinatura Digital' ? 'bg-gray-200' : ''}`} onClick={(e) => {
-              e.stopPropagation();
-              handleSetSignatureType(signatory.id, 'Assinatura Digital');
-            }}>
-              Assinatura Digital
-            </button>
-            <button className={`py-2 px-1 font-medium text-gray-600 w-40 rounded-lg shadow-md ${signatureTypes[signatory.id] === 'Rubrica' ? 'bg-gray-200' : ''}`} onClick={(e) => {
-              e.stopPropagation();
-              handleSetSignatureType(signatory.id, 'Rubrica');
-            }}>
-              Rubrica
-            </button>
-          </div>
-        </div>
-      ))}
+      <Reorder.Group axis="y" values={signatories} onReorder={onReorderSignatories}>
+        {signatories.map((signatory, index) => (
+          <Reorder.Item key={signatory.id} value={signatory}>
+            <div className="relative p-4 my-4 bg-white rounded-lg shadow-md cursor-pointer" onClick={() => handleSignatoryClick(signatory)}>
+              <div className="flex items-center justify-center">
+                <div className="text-lg font-semibold text-center">Assinante {index + 1}</div>
+                <button className="absolute top-0 mt-1 mr-1 text-red-400 right-1 hover:text-red-600 focus:outline-none" onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteSignatory(signatory.id);
+                }}>
+                  X
+                </button>
+              </div>
+              <div className="text-lg font-normal">{signatory.name}</div>
+              <div className="text-lg font-normal">{signatory.email}</div>
+              <div className="flex w-full gap-4">
+                <button className={`py-2 px-1 font-medium text-gray-600 w-40 rounded-lg shadow-md ${signatureTypes[signatory.id] === 'Assinatura Digital' ? 'bg-gray-200' : ''}`} onClick={(e) => {
+                  e.stopPropagation();
+                  handleSetSignatureType(signatory.id, 'Assinatura Digital');
+                }}>
+                  Assinatura Digital
+                </button>
+                <button className={`py-2 px-1 font-medium text-gray-600 w-40 rounded-lg shadow-md ${signatureTypes[signatory.id] === 'Rubrica' ? 'bg-gray-200' : ''}`} onClick={(e) => {
+                  e.stopPropagation();
+                  handleSetSignatureType(signatory.id, 'Rubrica');
+                }}>
+                  Rubrica
+                </button>
+              </div>
+            </div>
+          </Reorder.Item>
+        ))}
+      </Reorder.Group>
       {selectedSignatories.map((selectedSignatory, index) => (
     <DraggableSignatory
     key={selectedSignatory.id}
@@ -240,7 +259,6 @@ export function SignatoryContainer({ signatories, onClick, textInputVisible, doc
     onRemove={removeSignatoryPosition}
     selectedSignatureType={signatureTypes[selectedSignatory.id]} 
   />
-  
       ))}
     </div>
   );

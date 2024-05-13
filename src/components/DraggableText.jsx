@@ -112,13 +112,17 @@ export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signat
 
   const handleDragStop = useCallback((event, data) => {
     setDragged(false);
-    if (data && typeof data.x === 'number' && typeof data.y === 'number') {
-      const newPosition = { x: data.x, y: data.y };
-      onSet(name, newPosition);
+    if (data) {
+        const docRect = documentRef.current.getBoundingClientRect(); 
+        const newPosition = {
+            x: data.x - docRect.left, 
+            y: data.y - docRect.top   
+        };
+        onSet(name, newPosition);
     } else {
-      console.error('Dados de arrasto inválidos:', data);
+        console.error('Dados de arrasto inválidos:', data);
     }
-  }, [name, onSet]);
+}, [name, onSet, documentRef]);
   
 
   useEffect(() => {
@@ -155,8 +159,16 @@ export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signat
   }, [documentRef, pageDetails, position, setPosition, name]);
   
 
+
+  const bounds = {
+    left: 0,
+    top: 0,
+    right: documentRef.current ? documentRef.current.clientWidth : 0,
+    bottom: documentRef.current ? documentRef.current.clientHeight : 0
+};
+
   return (
-    <Draggable  defaultPosition={{ x: 0, y: 0 }}  onStart={handleDragStart} onStop={handleDragStop}>
+    <Draggable defaultPosition={{ x: 0, y: 0 }}  onStart={handleDragStart} onStop={handleDragStop}>
      <div className={`absolute z-50 flex items-center cursor-pointer justify-between p-2 border-2 border-dashed rounded-lg ${draggableStyles}`}>
         <div className="cursor-pointer ellipsis">
         <div className="absolute top-0 text-xs text-gray-500 left-2">{`Página: ${pageDetails.pageNumber}, X: ${position.x.toFixed(2)}, Y: ${position.y.toFixed(2)}`}</div>
