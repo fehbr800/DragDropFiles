@@ -70,7 +70,7 @@ export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signat
 
 
 
-  console.log(currentPage)
+  console.log(selectedSignatureType)
 
   const inputRef = useRef(null);
 
@@ -168,10 +168,10 @@ export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signat
 };
 
   return (
-    <Draggable defaultPosition={{ x: 0, y: 0 }}  onStart={handleDragStart} onStop={handleDragStop}>
+    <Draggable bounds='parent' defaultPosition={{ x: 100, y: 100 }}  onStart={handleDragStart} onStop={handleDragStop}>
      <div className={`absolute z-50 flex items-center cursor-pointer justify-between p-2 border-2 border-dashed rounded-lg ${draggableStyles}`}>
         <div className="cursor-pointer ellipsis">
-        <div className="absolute top-0 text-xs text-gray-500 left-2">{`Página: ${pageDetails.pageNumber}, X: ${position.x.toFixed(2)}, Y: ${position.y.toFixed(2)}`}</div>
+        {/* <div className="absolute top-0 text-xs text-gray-500 left-2">{`Página: ${pageDetails.pageNumber}, X: ${position.x.toFixed(2)}, Y: ${position.y.toFixed(2)}`}</div> */}
           <EllipsisVerticalIcon className="w-6 h-8"/>
         </div>
         <div onClick={handleSet} className="flex items-start justify-between gap-4">

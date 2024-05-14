@@ -1,5 +1,5 @@
 'use client'
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Document, Page, pdfjs } from "react-pdf";
 import { PDFDocument, rgb } from "pdf-lib";
@@ -44,7 +44,12 @@ const documentRef = useRef(null);
 const [selectedText, setSelectedText] = useState('')
 const [editingIndex, setEditingIndex] = useState(-1);
 const [iframeSrc, setIframeSrc] = useState(null);
-
+const [signatoryPositions, setSignatoryPositions] = useState({});
+const [signatureTypes, setSignatureTypes] = useState({});
+const [highlightDocument, setHighlightDocument] = useState(false);
+const [feedbackMessage, setFeedbackMessage] = useState('');
+const [selectedSignatories, setSelectedSignatories] = useState([]);
+const [allSignatures, setAllSignatures] = useState({});
 
 
 
@@ -60,17 +65,45 @@ else { console.log("Limite de 5 signatários  atingido. Não é possível adicio
 
   };
 
-  const handleSet = (text) => {
-  setSelectedText(text);
+  const handleSetPosition = (signatoryId, newPosition) => {
+    setSignatoryPositions((prevPositions) => ({
+      ...prevPositions,
+      [pageNum]: {
+        ...prevPositions[pageNum],
+        [signatoryId]: newPosition
+      }
+    }));
+    setHighlightDocument(false);
+    localStorage.setItem('signatoryPositions', JSON.stringify(signatoryPositions));
   };
 
-  const handleSignatoryClick = (signatory) => {
-  setSelectedSignatory(signatory);
+
+  const removeSignatoryPosition = (name, index) => {
+    setSignatoryPositions((prevPositions) => {
+      const updatedPositions = { ...prevPositions };
+      if (updatedPositions[pageNum] && updatedPositions[pageNum][name]) {
+        updatedPositions[pageNum][name].splice(index, 1);
+      }
+      return updatedPositions;
+    });
   };
 
-  const handleCancel = () => {
-  setSelectedSignatory(null);
-  };
+  useEffect(() => {
+    const savedPositions = JSON.parse(localStorage.getItem('signatoryPositions')) || {};
+    setSignatoryPositions(savedPositions);
+  }, []);
+
+  useEffect(() => {
+    setSelectedSignatories([]);
+  }, [pageNum]);
+
+  useEffect(() => {
+    const currentPagePositions = signatoryPositions[pageNum] || {};
+    const newSelectedSignatories = signatories.filter(signatory => currentPagePositions[signatory.id]);
+    setSelectedSignatories(newSelectedSignatories);
+  }, [pageNum]);
+
+
 
 
   const simulateDataSending = async (data) => {
@@ -132,6 +165,31 @@ else { console.log("Limite de 5 signatários  atingido. Não é possível adicio
   }
   };
 
+  const getCurrentPagePositions = () => signatoryPositions[pageNum] || {};
+
+  const selectSignatory = (signatory) => {
+    setSelectedSignatories((prevSelectedSignatories) => {
+      if (!prevSelectedSignatories.some((s) => s.id === signatory.id)) {
+        return [...prevSelectedSignatories, signatory];
+      }
+      return prevSelectedSignatories;
+    });
+    addSignatureToCurrentPage(signatory, pageNum);
+  };
+
+ 
+  const addSignatureToCurrentPage = useCallback(
+    (signature, pageNumberToAdd) => {
+      setAllSignatures((prevSignatures) => {
+        const updatedSignatures = { ...prevSignatures };
+        updatedSignatures[pageNumberToAdd] = updatedSignatures[pageNumberToAdd] || [];
+        updatedSignatures[pageNumberToAdd].push(signature);
+        return updatedSignatures;
+      });
+    },
+    [setAllSignatures]
+  );
+
 
   const arrayBufferToBase64 = (buffer) => {
   let binary = '';
@@ -170,7 +228,7 @@ else { console.log("Limite de 5 signatários  atingido. Não é possível adicio
               <SignatoryForm addSignatory={addSignatory} signatories={signatories} pdf={pdf} pageNum={pageNum}
                 pageDetails={pageDetails} setPosition={setPosition} setPdf={setPdf} />
 
-              <SignatoryContainer signatories={signatories} onClick={()=> setSelectedSignatory(true)}
+              <SignatoryContainer signatories={signatories}   onClick={selectSignatory}
                 onDelete={handleDeleteSignatory}
                 position={position}
                 pdf={pdf}
@@ -180,6 +238,7 @@ else { console.log("Limite de 5 signatários  atingido. Não é possível adicio
                 setPosition={setPosition}
                 setPdf={setPdf}
                 pageNum={pageNum}
+                signatureTypes={signatureTypes}
 
                 />
                 {pdf?(
@@ -211,21 +270,48 @@ else { console.log("Limite de 5 signatários  atingido. Não é possível adicio
 
 
             <div ref={documentRef} className="p-4 rounded-md relative parent max-w-[800px] overflow-hidden mx-auto flex flex-col">
-              <Document file={pdf} onLoadSuccess={(data)=> {
-                setTotalPages(data.numPages);
-                }}
-                >
-                <Page pageNumber={pageNum + 1}  width={800} className="max-h-[1200px] "
-                  renderTextLayer={false} onLoadSuccess={(data)=> {
-                  setPageDetails(data);
-                  }}
-                  />
-              </Document>             
-            </div>
-
-            
+            <Document file={pdf} onLoadSuccess={({ numPages }) => setTotalPages(numPages)}>
+                    {Array.from(new Array(totalPages), (_, pageIndex) => (
+                      <div key={`page_${pageIndex + 1}`}>
+                        {pageIndex + 1 === pageNum && (
+                          <div className="relative">
+                            {allSignatures[pageNum] &&
+                              allSignatures[pageNum].map((signature, index) => (
+                                <DraggableSignatory
+                                  key={`signature_${index}`}
+                                  index={index}
+                                  pageDetails={pageDetails}
+                                  documentRef={documentRef}
+                                  setPosition={setPosition}
+                                  currentPage={pageNum}
+                                  position={getCurrentPagePositions()[signature.id] || { x: 0, y: 0 }}
+                                  signatory={signature}
+                                  onCancel={() =>
+                                    setSelectedSignatories((prevSelectedSignatories) =>
+                                      prevSelectedSignatories.filter(
+                                        (selected) => selected.id !== signature.id
+                                      )
+                                    )
+                                  }
+                                  onEnd={(e, data) => {
+                                    if (data) {
+                                      handleSetPosition(signature.id, { x: data.x, y: data.y });
+                                    }
+                                  }}
+                                  onSet={handleSetPosition}
+                                  onRemove={removeSignatoryPosition}
+                                  selectedSignatureType={signatureTypes[signature.id]}
+                                />
+                              ))}
+                            <Page  width={800}  className="max-h-[1200px]" renderTextLayer={false} pageNumber={pageNum} />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </Document>
+            </div>           
           </div>
-          <PagingControl pageNum={pageNum} setPageNum={setPageNum} totalPages={totalPages} />
+          <PagingControl pageNum={pageNum} setPageNum={setPageNum} totalPages={totalPages} addSignatureToCurrentPage={addSignatureToCurrentPage} />
           </div>
          
         </div>

@@ -77,17 +77,17 @@ export default function SignatoryForm({ addSignatory, signatories }) {
 
 
 
-export function SignatoryContainer({ signatories, setSignatories,  onClick, textInputVisible, documentRef, setTextInputVisible, pdf, pageNum, pageDetails, setPosition, setPdf, position, onDelete }) {
+export function SignatoryContainer({ signatories, setSignatories,signatureTypes:typeSignature, onClick, textInputVisible, documentRef, setTextInputVisible, pdf, pageNum, pageDetails, setPosition, setPdf, position, onDelete }) {
   const [selectedSignatories, setSelectedSignatories] = useState([]);
   const [signatoryPositions, setSignatoryPositions] = useState({});
   const [currentPage, setCurrentPage] = useState(pageNum);
-  const [selectedSignatureType, setSelectedSignatureType] = useState(null);
-  const [signatureTypes, setSignatureTypes] = useState({});
+
+  const [signatureTypes, setSignatureTypes] = useState(typeSignature);
   const [highlightDocument, setHighlightDocument] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState('');
   
   
-  console.log(signatoryPositions)
+  console.log(signatories)
 
   const getCurrentPagePositions = () => signatoryPositions[pageNum] || {};
 
@@ -98,13 +98,10 @@ export function SignatoryContainer({ signatories, setSignatories,  onClick, text
 
   
   const handleSignatoryClick = (signatory) => {
-    const isSelected = selectedSignatories.some(selected => selected.id === signatory.id);
-    setSelectedSignatories(isSelected ? selectedSignatories.filter(selected => selected.id !== signatory.id) : [...selectedSignatories, signatory]);
-    setHighlightDocument(true);
-    setFeedbackMessage('Arraste o signatário para o documento para posicionar');
-    setTimeout(() => setFeedbackMessage(''), 5000);  
-    onClick && onClick();
+    setSelectedSignatories([...selectedSignatories, signatory]);
+    onClick(signatory); // Passe o signatário selecionado para o Home
   };
+
 
   const handleSetSignatureType = (signatoryId, type) => {
     setSignatureTypes(prevTypes => ({
@@ -238,7 +235,11 @@ export function SignatoryContainer({ signatories, setSignatories,  onClick, text
           </Reorder.Item>
         ))}
       </Reorder.Group>
-      {selectedSignatories.map((selectedSignatory, index) => (
+    </div>
+  );
+}
+
+      {/* {selectedSignatories.map((selectedSignatory, index) => (
     <DraggableSignatory
     key={selectedSignatory.id}
     index={index}
@@ -259,7 +260,4 @@ export function SignatoryContainer({ signatories, setSignatories,  onClick, text
     onRemove={removeSignatoryPosition}
     selectedSignatureType={signatureTypes[selectedSignatory.id]} 
   />
-      ))}
-    </div>
-  );
-}
+      ))} */}
