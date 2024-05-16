@@ -1,4 +1,4 @@
-import { primary45 } from "@/utils/colors";
+
 import { BigButton } from "./Button";
 import { ChevronDoubleLeftIcon, ChevronDoubleRightIcon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import {primary45} from '../utils/colors';
+
 
 import {Modal} from './Modal';
 

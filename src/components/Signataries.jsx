@@ -77,19 +77,18 @@ export default function SignatoryForm({ addSignatory, signatories }) {
 
 
 
-export function SignatoryContainer({ signatories, setSignatories,signatureTypes:typeSignature, onClick, textInputVisible, documentRef, setTextInputVisible, pdf, pageNum, pageDetails, setPosition, setPdf, position, onDelete }) {
+export function SignatoryContainer({ signatories, setSignatories,pageSignatureTypes, setPageSignatureTypes, setSignatureTypes, onClick, textInputVisible, documentRef, setTextInputVisible, pdf, pageNum, pageDetails, setPosition, setPdf, position, onDelete }) {
   const [selectedSignatories, setSelectedSignatories] = useState([]);
   const [signatoryPositions, setSignatoryPositions] = useState({});
   const [currentPage, setCurrentPage] = useState(pageNum);
-
-  const [signatureTypes, setSignatureTypes] = useState(typeSignature);
   const [highlightDocument, setHighlightDocument] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState('');
-  
-  
-  console.log(signatories)
 
-  const getCurrentPagePositions = () => signatoryPositions[pageNum] || {};
+
+  
+  
+  console.log(pageSignatureTypes)
+
 
 
   const onReorderSignatories = (newOrder) => {
@@ -99,7 +98,7 @@ export function SignatoryContainer({ signatories, setSignatories,signatureTypes:
   
   const handleSignatoryClick = (signatory) => {
     setSelectedSignatories([...selectedSignatories, signatory]);
-    onClick(signatory); // Passe o signatário selecionado para o Home
+    onClick(signatory); 
   };
 
 
@@ -107,6 +106,13 @@ export function SignatoryContainer({ signatories, setSignatories,signatureTypes:
     setSignatureTypes(prevTypes => ({
       ...prevTypes,
       [signatoryId]: type
+    }));
+    setPageSignatureTypes(prevPageTypes => ({
+      ...prevPageTypes,
+      [currentPage]: {
+        ...prevPageTypes[currentPage],
+        [signatoryId]: type
+      }
     }));
   };
 
@@ -121,71 +127,24 @@ export function SignatoryContainer({ signatories, setSignatories,signatureTypes:
   
 
   const handleDeleteSignatory = (signatoryId) => {
-    onDelete(signatoryId);
-    setSelectedSignatories(prevSignatories =>
-      prevSignatories.filter(signatory => signatory.id !== signatoryId)
-    );
-    setSignatoryPositions(prevPositions => {
-      const updatedPositions = { ...prevPositions };
-      Object.keys(updatedPositions).forEach(page => {
-        delete updatedPositions[page][signatoryId];
-      });
-      return updatedPositions;
+  onDelete(signatoryId);
+  setSelectedSignatories(prevSignatories =>
+    prevSignatories.filter(signatory => signatory.id !== signatoryId)
+  );
+  setSignatoryPositions(prevPositions => {
+    const updatedPositions = { ...prevPositions };
+    Object.keys(updatedPositions).forEach(page => {
+      delete updatedPositions[page][signatoryId];
     });
-  };
+    return updatedPositions;
+  });
+};
 
   
-
-  const handleSetPosition = (signatoryId, newPosition) => {
-    setSignatoryPositions(prevPositions => ({
-      ...prevPositions,
-      [currentPage]: {
-        ...prevPositions[currentPage],
-        [signatoryId]: newPosition
-      }
-    }));
-    setHighlightDocument(false);
-  };
-
-
-  const removeSignatoryPosition = (name, index) => {
-    setSignatoryPositions((prevPositions) => {
-      const updatedPositions = { ...prevPositions };
-      if (updatedPositions[currentPage] && updatedPositions[currentPage][name]) {
-        updatedPositions[currentPage][name].splice(index, 1);
-      }
-      return updatedPositions;
-    });
-  };
-
-  useEffect(() => {
-    const savedPositions = JSON.parse(localStorage.getItem('signatoryPositions')) || {};
-    setSignatoryPositions(savedPositions);
-  }, []);
-
-  useEffect(() => {
-    setCurrentPage(pageNum);
-  }, [pageNum]);
-
-  useEffect(() => {
-    setSelectedSignatories([]);
-  }, [pageNum]);
-
-  useEffect(() => {
-    const currentPagePositions = signatoryPositions[pageNum] || {};
-    selectedSignatories.forEach(signatory => {
-      const position = currentPagePositions[signatory.id];
-      if (position) {
-        setPosition(signatory, position); 
-      }
-    });
-  }, [pageNum]);
-
 
 
   const remainingSlots = 5 - signatories.length;
   const isLimitReached = remainingSlots <= 0;
-  const currentPagePositions = getCurrentPagePositions();
 
   return (
     <div className="grid grid-cols-1 gap-4"> 
@@ -215,21 +174,21 @@ export function SignatoryContainer({ signatories, setSignatories,signatureTypes:
                   X
                 </button>
               </div>
-              <div className="text-lg font-normal">{signatory.name}</div>
+              <div className="text-lg font-normal">{signatory.name} </div>
               <div className="text-lg font-normal">{signatory.email}</div>
               <div className="flex w-full gap-4">
-                <button className={`py-2 px-1 font-medium text-gray-600 w-40 rounded-lg shadow-md ${signatureTypes[signatory.id] === 'Assinatura Digital' ? 'bg-gray-200' : ''}`} onClick={(e) => {
-                  e.stopPropagation();
-                  handleSetSignatureType(signatory.id, 'Assinatura Digital');
-                }}>
-                  Assinatura Digital
-                </button>
-                <button className={`py-2 px-1 font-medium text-gray-600 w-40 rounded-lg shadow-md ${signatureTypes[signatory.id] === 'Rubrica' ? 'bg-gray-200' : ''}`} onClick={(e) => {
-                  e.stopPropagation();
-                  handleSetSignatureType(signatory.id, 'Rubrica');
-                }}>
-                  Rubrica
-                </button>
+              <button className={`py-2 px-1 font-medium text-gray-600 w-40 rounded-lg shadow-md ${pageSignatureTypes[currentPage] && pageSignatureTypes[currentPage][signatory.id] === 'Assinatura Digital' ? 'bg-gray-200' : ''}`} onClick={(e) => {
+              e.stopPropagation();
+              handleSetSignatureType(signatory.id, 'Assinatura Digital');
+            }}>
+              Assinatura Digital
+            </button>
+            <button className={`py-2 px-1 font-medium text-gray-600 w-40 rounded-lg shadow-md ${pageSignatureTypes[currentPage] && pageSignatureTypes[currentPage][signatory.id] === 'Rubrica' ? 'bg-gray-200' : ''}`} onClick={(e) => {
+              e.stopPropagation();
+              handleSetSignatureType(signatory.id, 'Rubrica');
+            }}>
+              Rubrica
+            </button>
               </div>
             </div>
           </Reorder.Item>
@@ -239,25 +198,3 @@ export function SignatoryContainer({ signatories, setSignatories,signatureTypes:
   );
 }
 
-      {/* {selectedSignatories.map((selectedSignatory, index) => (
-    <DraggableSignatory
-    key={selectedSignatory.id}
-    index={index}
-    initialText={textInputVisible && selectedSignatory === 'date' ? dayjs().format('MM/d/YYYY') : null}
-    pageDetails={pageDetails}
-    documentRef={documentRef}
-    setPosition={setPosition}
-    currentPage={currentPage}
-    position={getCurrentPagePositions()[selectedSignatory.id] || { x: 0, y: 0 }}
-    signatory={selectedSignatory}
-    onCancel={() => setSelectedSignatories(selectedSignatories.filter((selected) => selected.id !== selectedSignatory.id))}
-    onEnd={(e, data) => {
-      if (currentPage === pageNum && data) {
-        setPosition(selectedSignatory, { x: data.x, y: data.y });
-      }
-    }}
-    onSet={handleSetPosition}
-    onRemove={removeSignatoryPosition}
-    selectedSignatureType={signatureTypes[selectedSignatory.id]} 
-  />
-      ))} */}

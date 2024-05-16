@@ -1,4 +1,4 @@
-import { cleanBorder, primary45 } from "@/utils/colors";
+
 import { DocumentPlusIcon } from "@heroicons/react/24/outline";
 import React, { useCallback } from "react";
 import { useDropzone } from "react-dropzone";

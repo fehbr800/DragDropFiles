@@ -1,6 +1,5 @@
 import Draggable from "react-draggable";
 import { CheckIcon, EllipsisVerticalIcon, TrashIcon } from'@heroicons/react/24/outline'
-import { cleanBorder, errorColor, goodColor, primary45 } from "../utils/colors";
 import { useState, useEffect, useRef, useCallback } from "react";
 
 export default function DraggableText({ onEnd, onSet, onCancel, initialText }) {
@@ -62,7 +61,7 @@ export default function DraggableText({ onEnd, onSet, onCancel, initialText }) {
 
 
 
-export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signatory, index,pdf,pageDetails, documentRef, position, setPosition, onRemove, selectedSignatureType, currentPage }) {
+export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signatory, index,pdf,pageDetails, documentRef, position, setPosition, onRemove, signatureTypes, pageSignatureTypes, currentPage }) {
   const [confirmed, setConfirmed] = useState(false);
   const [name, setName] = useState(initialText || signatory?.name || "Nome");
   const [email, setEmail] = useState(signatory?.email || "");
@@ -70,9 +69,12 @@ export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signat
 
 
 
-  console.log(selectedSignatureType)
+  console.log(pageSignatureTypes)
 
   const inputRef = useRef(null);
+
+
+
 
   const selectText = (element) => {
     const selection = window.getSelection();
@@ -102,7 +104,7 @@ export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signat
   const handleSet = async () => {
     if (!confirmed) {
       if (typeof name === 'string' && name.trim().length > 0) {
-        onSet(name, position);
+        onSet(signatory.id, position);
         setConfirmed(true);
       } else {
         console.error('O nome não é uma string válida ou está vazio:', name);
@@ -110,19 +112,21 @@ export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signat
     }
   };
 
-  const handleDragStop = useCallback((event, data) => {
-    setDragged(false);
-    if (data) {
-        const docRect = documentRef.current.getBoundingClientRect(); 
+  const handleDragStop = useCallback(
+    (event, data) => {
+      setDragged(false);
+      if (data) {
         const newPosition = {
-            x: data.x - docRect.left, 
-            y: data.y - docRect.top   
+          x: data.x,
+          y: data.y,
         };
-        onSet(name, newPosition);
-    } else {
+        onSet(signatory.id, newPosition);
+      } else {
         console.error('Dados de arrasto inválidos:', data);
-    }
-}, [name, onSet, documentRef]);
+      }
+    },
+    [signatory.id, onSet]
+  );
   
 
   useEffect(() => {
@@ -148,7 +152,8 @@ export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signat
       const scaleY = rect.height / pageDetails.height;
       const newX = (position.x - rect.x) / scaleX;
       const newY = (position.y - rect.y) / scaleY;
-      setPosition(name, { x: newX, y: newY });
+      setPosition(signatory.id, { x: newX, y: newY });
+
     };
 
     window.addEventListener('resize', handleResize);
@@ -156,19 +161,11 @@ export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signat
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, [documentRef, pageDetails, position, setPosition, name]);
+  }, [documentRef, pageDetails, position, setPosition, signatory.id]);
   
 
-
-  const bounds = {
-    left: 0,
-    top: 0,
-    right: documentRef.current ? documentRef.current.clientWidth : 0,
-    bottom: documentRef.current ? documentRef.current.clientHeight : 0
-};
-
   return (
-    <Draggable bounds='parent' defaultPosition={{ x: 100, y: 100 }}  onStart={handleDragStart} onStop={handleDragStop}>
+    <Draggable bounds='parent' position={position}  onStart={handleDragStart} onStop={handleDragStop}>
      <div className={`absolute z-50 flex items-center cursor-pointer justify-between p-2 border-2 border-dashed rounded-lg ${draggableStyles}`}>
         <div className="cursor-pointer ellipsis">
         {/* <div className="absolute top-0 text-xs text-gray-500 left-2">{`Página: ${pageDetails.pageNumber}, X: ${position.x.toFixed(2)}, Y: ${position.y.toFixed(2)}`}</div> */}
@@ -183,14 +180,14 @@ export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signat
             
           >
             <div className="text-sm text-gray-500">
-              {selectedSignatureType && `${selectedSignatureType}`}
+            {pageSignatureTypes[currentPage] && `${pageSignatureTypes[currentPage][signatory.id]}`}
             </div>
             <div className="text-sm text-gray-500">
               {email}
             </div>
           </div>
           <div className="flex mx-2">
-            <button className="text-red-500/40" onClick={onCancel}>
+            <button className="text-red-500/40 hover:text-red-400" onClick={() => onCancel(signatory.id)}>
               <TrashIcon className="w-5 h-5" />
             </button>
           </div>

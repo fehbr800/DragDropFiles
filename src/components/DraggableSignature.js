@@ -1,7 +1,6 @@
 import Draggable from "react-draggable";
 
 
-import {cleanBorder, errorColor, goodColor, primary45} from "../utils/colors";
 
 export default function DraggableSignature({ url, onEnd, onSet, onCancel }) {
   const styles = {
