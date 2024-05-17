@@ -61,7 +61,7 @@ export default function DraggableText({ onEnd, onSet, onCancel, initialText }) {
 
 
 
-export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signatory, index,pdf,pageDetails, documentRef, position, setPosition, onRemove, signatureTypes, pageSignatureTypes, currentPage }) {
+export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signatory,pdf,pageDetails, documentRef, position, setPosition, onRemove, signatureTypes, pageSignatureTypes, currentPage }) {
   const [confirmed, setConfirmed] = useState(false);
   const [name, setName] = useState(initialText || signatory?.name || "Nome");
   const [email, setEmail] = useState(signatory?.email || "");
@@ -69,7 +69,7 @@ export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signat
 
 
 
-  console.log(pageSignatureTypes)
+  // console.log(pageSignatureTypes)
 
   const inputRef = useRef(null);
 
@@ -193,7 +193,7 @@ export function DraggableSignatory({ onEnd, onCancel, onSet, initialText, signat
           </div>
         </div>
         <div className="absolute -top-3 -right-[0.8rem] flex items-center py-1 px-2 text-sm text-gray-400 bg-white rounded-lg shadow-md">
-          {index + 1}
+          {signatory.sequence}
         </div>
       </div>
     </Draggable>

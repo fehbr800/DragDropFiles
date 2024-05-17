@@ -33,21 +33,15 @@ const [pdf, setPdf] = useState(null);
 const [autoDate, setAutoDate] = useState(true);
 const [signatureURL, setSignatureURL] = useState(null);
 const [position, setPosition] = useState(null);
-const [signatureDialogVisible, setSignatureDialogVisible] = useState(false);
 const [textInputVisible, setTextInputVisible] = useState(false);
-const [selectedSignatory, setSelectedSignatory] = useState(false);
 const [pageNum, setPageNum] = useState(1);
 const [totalPages, setTotalPages] = useState(0);
 const [pageDetails, setPageDetails] = useState(null);
 const [signatories, setSignatories] = useState([]);
 const documentRef = useRef(null);
-const [selectedText, setSelectedText] = useState('')
-const [editingIndex, setEditingIndex] = useState(-1);
 const [iframeSrc, setIframeSrc] = useState(null);
 const [signatoryPositions, setSignatoryPositions] = useState({});
 const [signatureTypes, setSignatureTypes] = useState({});
-const [highlightDocument, setHighlightDocument] = useState(false);
-const [feedbackMessage, setFeedbackMessage] = useState('');
 const [selectedSignatories, setSelectedSignatories] = useState([]);
 const [allSignatures, setAllSignatures] = useState({});
 const [sendingData, setSendingData] = useState(false); 
@@ -82,7 +76,6 @@ else { console.log("Limite de 5 signatários  atingido. Não é possível adicio
       localStorage.setItem('signatoryPositions', JSON.stringify(updatedPositions));
       return updatedPositions;
     });
-    setHighlightDocument(false);
   };
 
   const handleRemoveSignatory = (signatoryId) => {
@@ -245,16 +238,6 @@ else { console.log("Limite de 5 signatários  atingido. Não é possível adicio
     <div className="">
 
 
-
-      {signatureDialogVisible ? (
-      <AddSigDialog autoDate={autoDate} setAutoDate={setAutoDate} onClose={()=> setSignatureDialogVisible(false)}
-        onConfirm={(url) => {
-        setSignatureURL(url);
-        setSignatureDialogVisible(false);
-        }}
-        />
-        ) : null}
-
         <div className="flex items-center justify-center my-auto">
           {!pdf ? (
           <Drop onLoaded={async (files)=> {
@@ -313,7 +296,6 @@ else { console.log("Limite de 5 signatários  atingido. Não é possível adicio
               <button className="p-1 text-red-400 bg-white rounded-lg shadow-lg hover:text-red-600 hover:bg-gray-50"
                 onClick={()=> {
                 setTextInputVisible(false);
-                setSignatureDialogVisible(false);
                 setSignatureURL(null);
                 setPdf(null);
                 setTotalPages(0);
@@ -335,7 +317,6 @@ else { console.log("Limite de 5 signatários  atingido. Não é possível adicio
                               allSignatures[pageNum].map((signature, index) => (
                                 <DraggableSignatory
                                 key={`signature_${signature.id}`} 
-                                  index={index}
                                   pageDetails={pageDetails}
                                   documentRef={documentRef}
                                   setPosition={setPosition}

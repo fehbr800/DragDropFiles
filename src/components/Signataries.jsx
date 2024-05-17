@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import DraggableText, { DraggableSignatory } from "./DraggableText";
 import { PDFDocument } from "pdf-lib";
 import { blobToURL } from "@/utils/utils";
@@ -16,8 +16,10 @@ export default function SignatoryForm({ addSignatory, signatories }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (name && email) {
+      const sequence = signatories.length + 1;
       const newSignatory = {
         id: uuidv4(), 
+        sequence,
         name,
         email
       };
@@ -87,14 +89,20 @@ export function SignatoryContainer({ signatories, setSignatories,pageSignatureTy
 
   
   
-  console.log(pageSignatureTypes)
+
+  
+  // console.log(pageSignatureTypes)
 
 
 
-  const onReorderSignatories = (newOrder) => {
+  const onReorderSignatories = useCallback((newOrder) => {
     setSignatories(newOrder);
-  };
-
+    const updatedSignatories = newOrder.map((signatory, index) => ({
+      ...signatory,
+      sequence: index + 1
+    }));
+    setSignatories(updatedSignatories);
+  }, [setSignatories]);
   
   const handleSignatoryClick = (signatory) => {
     setSelectedSignatories([...selectedSignatories, signatory]);
@@ -166,7 +174,7 @@ export function SignatoryContainer({ signatories, setSignatories,pageSignatureTy
           <Reorder.Item key={signatory.id} value={signatory}>
             <div className="relative p-4 my-4 bg-white rounded-lg shadow-md cursor-pointer" onClick={() => handleSignatoryClick(signatory)}>
               <div className="flex items-center justify-center">
-                <div className="text-lg font-semibold text-center">Assinante {index + 1}</div>
+                <div className="text-lg font-semibold text-center">Assinante {signatory.sequence}</div>
                 <button className="absolute top-0 mt-1 mr-1 text-red-400 right-1 hover:text-red-600 focus:outline-none" onClick={(e) => {
                   e.stopPropagation();
                   handleDeleteSignatory(signatory.id);
