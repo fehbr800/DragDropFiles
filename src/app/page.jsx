@@ -99,8 +99,6 @@ else { console.log("Limite de 5 signatários  atingido. Não é possível adicio
     setSelectedSignatories((prevSelectedSignatories) =>
       prevSelectedSignatories.filter(s => s.id !== signatoryId)
     );
-  
-   
   }
   
 

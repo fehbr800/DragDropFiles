@@ -83,11 +83,13 @@ export function SignatoryContainer({ signatories, setSignatories,pageSignatureTy
   const [selectedSignatories, setSelectedSignatories] = useState([]);
   const [signatoryPositions, setSignatoryPositions] = useState({});
   const [currentPage, setCurrentPage] = useState(pageNum);
-  const [highlightDocument, setHighlightDocument] = useState(false);
-  const [feedbackMessage, setFeedbackMessage] = useState('');
 
 
-  
+
+  useEffect(() => {
+    setCurrentPage(pageNum); 
+  }, [pageNum]);
+
   
 
   
@@ -126,7 +128,6 @@ export function SignatoryContainer({ signatories, setSignatories,pageSignatureTy
 
   useEffect(() => {
     if (selectedSignatories.length === 0) {
-      setHighlightDocument(false);
     }
   }, [selectedSignatories.length]);
 
@@ -146,6 +147,7 @@ export function SignatoryContainer({ signatories, setSignatories,pageSignatureTy
     });
     return updatedPositions;
   });
+  
 };
 
   
@@ -161,18 +163,11 @@ export function SignatoryContainer({ signatories, setSignatories,pageSignatureTy
           Limite de 5 signatários atingido. Não é possível adicionar mais. {signatories.length} / 5
         </div>
       )}
-
-      {highlightDocument && feedbackMessage && (
-        <p className="text-center text-blue-400">
-          {feedbackMessage}
-        </p>
-      )}
-        
       <div className="flex justify-end">Assinantes disponíveis {signatories.length}/5</div>
       <Reorder.Group axis="y" values={signatories} onReorder={onReorderSignatories}>
         {signatories.map((signatory, index) => (
           <Reorder.Item key={signatory.id} value={signatory}>
-            <div className="relative p-4 my-4 bg-white rounded-lg shadow-md cursor-pointer" onClick={() => handleSignatoryClick(signatory)}>
+            <div className="relative p-4 my-4 bg-white rounded-lg shadow-md cursor-pointer" >
               <div className="flex items-center justify-center">
                 <div className="text-lg font-semibold text-center">Assinante {signatory.sequence}</div>
                 <button className="absolute top-0 mt-1 mr-1 text-red-400 right-1 hover:text-red-600 focus:outline-none" onClick={(e) => {
@@ -185,18 +180,12 @@ export function SignatoryContainer({ signatories, setSignatories,pageSignatureTy
               <div className="text-lg font-normal">{signatory.name} </div>
               <div className="text-lg font-normal">{signatory.email}</div>
               <div className="flex w-full gap-4">
-              <button className={`py-2 px-1 font-medium text-gray-600 w-40 rounded-lg shadow-md ${pageSignatureTypes[currentPage] && pageSignatureTypes[currentPage][signatory.id] === 'Assinatura Digital' ? 'bg-gray-200' : ''}`} onClick={(e) => {
-              e.stopPropagation();
-              handleSetSignatureType(signatory.id, 'Assinatura Digital');
-            }}>
-              Assinatura Digital
-            </button>
-            <button className={`py-2 px-1 font-medium text-gray-600 w-40 rounded-lg shadow-md ${pageSignatureTypes[currentPage] && pageSignatureTypes[currentPage][signatory.id] === 'Rubrica' ? 'bg-gray-200' : ''}`} onClick={(e) => {
-              e.stopPropagation();
-              handleSetSignatureType(signatory.id, 'Rubrica');
-            }}>
-              Rubrica
-            </button>
+              <button className={`py-2 px-1 font-medium text-gray-600 w-40 rounded-lg shadow-md ${pageSignatureTypes[currentPage] && pageSignatureTypes[currentPage][signatory.id] === 'Assinatura Digital' ? 'bg-gray-200' : ''}`} onClick={() => { handleSetSignatureType(signatory.id, 'Assinatura Digital'); onClick(signatory); }}>
+                  Assinatura Digital
+                </button>
+                <button className={`py-2 px-1 font-medium text-gray-600 w-40 rounded-lg shadow-md ${pageSignatureTypes[currentPage] && pageSignatureTypes[currentPage][signatory.id] === 'Rubrica' ? 'bg-gray-200' : ''}`} onClick={() => { handleSetSignatureType(signatory.id, 'Rubrica'); onClick(signatory); }}>
+                  Rubrica
+                </button>
               </div>
             </div>
           </Reorder.Item>
